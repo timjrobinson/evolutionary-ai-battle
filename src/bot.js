@@ -2,8 +2,8 @@
 const MAX_NEURONS = 10e5;
 const MAP_WIDTH = 1000; 
 const MAP_HEIGHT = 500; 
-const NN_SQUARE_SIZE = 25;
-const BRAIN_SCALE = 10;
+const NN_SQUARE_SIZE = 50;
+const BRAIN_SCALE = 20;
 
 const INPUT_WIDTH = (MAP_WIDTH / NN_SQUARE_SIZE) * 2;
 const INPUT_HEIGHT = (MAP_HEIGHT / NN_SQUARE_SIZE) * 2;
@@ -20,6 +20,7 @@ class Bot {
         this.xPos = 50;
         this.yPos = 250;
         this.rotation = 0;
+        this.bullets = [];
 
         if (this.id > 1) {
             this.xPos = 950;
@@ -63,13 +64,12 @@ class Bot {
             dx: Math.round(Math.random() * 30) - 15, // -15 -> 15, 5 bit object
             dy: Math.round(Math.random() * 30) - 15, // -15 -> 15, 5 bit object
             dh: Math.round(Math.random() * 30) - 15, // -15 -> 15, 5 bit object
-            ds: false,
+            ds: Math.round(Math.random()),
         }
 
     }
 
     updateNetwork(inputs) {
-        console.log("In updateNetwork, inputs is: ", inputs);
         this.updateBotPosition(inputs.xPos, inputs.yPos, inputs.rotation)
         const translatedPositions = this.translateObjectPositions(inputs.otherPlayer)
         this.drawBrainView(translatedPositions);
@@ -106,7 +106,6 @@ class Bot {
             ctx.fillStyle = "#000000";
             const translatedXPos = Math.round(this.xPos / NN_SQUARE_SIZE * BRAIN_SCALE);
             const translatedYPos = Math.round(this.yPos / NN_SQUARE_SIZE * BRAIN_SCALE);
-            console.log("Drawing at: ", translatedXPos, " ", translatedYPos, " ", BRAIN_SCALE);
             ctx.fillRect(translatedXPos, translatedYPos, BRAIN_SCALE, BRAIN_SCALE);
         }
     }
