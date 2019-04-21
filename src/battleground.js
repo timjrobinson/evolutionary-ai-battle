@@ -2,7 +2,7 @@
 import { distanceBetweenPoints } from './math';
 
 const ORIGINAL_TICK_TIME = 75;
-const TICK_TIME = 500;
+const TICK_TIME = 75;
 const TICK_RATIO = ORIGINAL_TICK_TIME / TICK_TIME;
 
 const BOT_SIZE = 25;

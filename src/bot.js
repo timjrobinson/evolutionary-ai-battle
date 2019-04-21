@@ -4,20 +4,26 @@ const MAX_NEURONS = 10e5;
 const MAP_WIDTH = 1000; 
 const MAP_HEIGHT = 500; 
 
+// The brain is 2x the size of the map because the player is centered in the brain 
+// so if player is in top left and other in bottom right it needs enough room to show them
+const BRAIN_WIDTH = MAP_WIDTH * 2; 
+const BRAIN_HEIGHT = MAP_HEIGHT * 2;
+
 const BRAIN_CANVAS_WIDTH = 400;
 
 const BOT_SIZE = 25;
 const BULLET_SIZE = 10;
 
 const NN_SQUARE_SIZE = 25;
-const BRAIN_CANVAS_SCALE = (BRAIN_CANVAS_WIDTH / (MAP_WIDTH / NN_SQUARE_SIZE)); 
+const BRAIN_CANVAS_SCALE = (BRAIN_CANVAS_WIDTH / (BRAIN_WIDTH / NN_SQUARE_SIZE)); 
 
 const CENTER_X_POS = MAP_WIDTH / 2;
 const CENTER_Y_POS = MAP_HEIGHT / 2;
 
-const INPUT_WIDTH = (MAP_WIDTH / NN_SQUARE_SIZE) * 2;
-const INPUT_HEIGHT = (MAP_HEIGHT / NN_SQUARE_SIZE) * 2;
+const INPUT_WIDTH = BRAIN_WIDTH / NN_SQUARE_SIZE;
+const INPUT_HEIGHT = BRAIN_HEIGHT / NN_SQUARE_SIZE;
 const INPUT_NEURONS = INPUT_WIDTH * INPUT_HEIGHT;
+
 const OUTPUT_NEURONS = 16;
 
 const STARTING_LIVES = 5;
@@ -39,6 +45,8 @@ class Bot {
             this.xPos = 650;
             this.rotation = 180;
         }
+
+        this.initializeNeurons();
     }
 
     initializeGenome() {
@@ -47,7 +55,7 @@ class Bot {
 
     loadGenome(genome) {
         genome.genes.forEach(function (gene) {
-            this.genes.append(Object.assign({}, gene));
+            this.genes.push(Object.assign({}, gene));
         });
 
         initializeNeurons()
@@ -62,12 +70,12 @@ class Bot {
     initializeNeurons() {
         this.neurons = [];
 
-        for (let i = 0; i++; i < INPUT_NEURONS) {
-            this.neurons.append(createNeuron())
+        for (let i = 0; i < INPUT_NEURONS; i++) {
+            this.neurons.push(this.createNeuron())
         }
 
-        for (let i = 0; i++; i < INPUT_NEURONS) {
-            this.neurons[MAX_NEURONS+i] = createNeuron();
+        for (let i = 0; i < INPUT_NEURONS; i++) {
+            this.neurons[MAX_NEURONS+i] = this.createNeuron();
         }
     }
 
@@ -86,6 +94,7 @@ class Bot {
     updateNetwork(inputs) {
         this.updateBotPosition(inputs.xPos, inputs.yPos, inputs.rotation)
         const translatedPositions = this.translateObjectPositions(inputs.otherPlayer)
+        this.setInputNeurons(translatedPositions);
         this.drawBrainView(translatedPositions);
     }
 
@@ -101,7 +110,7 @@ class Bot {
         const rotationAngle =  degreesToRadians(-this.rotation);
         const centerPointX = MAP_WIDTH / 2;
         const centerPointY = MAP_HEIGHT / 2;
-        const translationMatrix = [centerPointX - this.xPos, centerPointY - this.yPos];
+        const translationMatrix = [MAP_WIDTH - this.xPos, MAP_HEIGHT - this.yPos];
 
         const otherPlayerRotated = rotateAroundPoint(this.xPos, this.yPos, rotationAngle, [otherPlayer.xPos, otherPlayer.yPos]);
         const otherPlayerTranslated = translateMatrix(translationMatrix, otherPlayerRotated);
@@ -120,6 +129,38 @@ class Bot {
         }
     }
 
+    setInputNeurons(translatedPositions) {
+        for (let i = 0; i < INPUT_NEURONS; i++) {
+            this.neurons[i].value = 0;
+            let currentSquare = {
+                minX: Math.floor(i % INPUT_WIDTH) * NN_SQUARE_SIZE,
+                maxX: (Math.floor(i % INPUT_WIDTH) + 1) * NN_SQUARE_SIZE,
+                minY: Math.floor(i / INPUT_WIDTH) * NN_SQUARE_SIZE,
+                maxY: (Math.floor(i / INPUT_WIDTH) + 1) * NN_SQUARE_SIZE,
+            }
+            if (translatedPositions.xPos > currentSquare.minX && translatedPositions.xPos < currentSquare.maxX
+                && translatedPositions.yPos > currentSquare.minY && translatedPositions.yPos < currentSquare.maxY) {
+                this.neurons[i].value = 1;
+            }
+            translatedPositions.bullets.forEach((bullet) => {
+                if (bullet.xPos > currentSquare.minX && bullet.xPos < currentSquare.maxX
+                    && bullet.yPos > currentSquare.minY && bullet.yPos < currentSquare.maxY) {
+                    this.neurons[i].value = -1;
+                }
+            });
+        }
+    }
+
+
+    /* This gets the current inputs, and makes their input flow down the network
+    to get to the outputs and figure out what output to press */
+    calculateWeights() {
+        console.log("Neurons length is: " + this.neurons.length);
+        for (let i = 0; i < this.neurons.length; i++) {
+
+        }
+    }
+
     drawBrainView(translatedPositions) {
         var canvas = document.getElementById('bot' + this.id + 'brain');
         if (canvas.getContext) {
@@ -132,8 +173,8 @@ class Bot {
 
             // Draw player, always in center. 
             ctx.fillStyle = playerColor;
-            const scaledXPos = this.scaleForBrain(CENTER_X_POS);
-            const scaledYPos = this.scaleForBrain(CENTER_Y_POS);
+            const scaledXPos = this.scaleForBrain(MAP_WIDTH);
+            const scaledYPos = this.scaleForBrain(MAP_HEIGHT);
             ctx.fillRect(scaledXPos, scaledYPos, BRAIN_CANVAS_SCALE, BRAIN_CANVAS_SCALE);
 
             //Draw other player and objects, translated to how this brain sees them. 
@@ -160,7 +201,8 @@ class Bot {
     }
 
     update(inputs) {
-        this.updateNetwork(inputs)
+        this.updateNetwork(inputs);
+        this.calculateWeights();
         return this.createOutputObject()
     }
 }
