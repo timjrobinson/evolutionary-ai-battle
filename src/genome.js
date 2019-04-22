@@ -12,8 +12,7 @@ import {
 const INITIAL_MUTATION_RATE = 1;
 
 const PARENT2_INNOVATION_GENE_CHANCE = 50;
-// const MUTATION_TYPES = ['connections', 'link', 'node', 'enable', 'disable'];
-const MUTATION_TYPES = ['link'];
+const MUTATION_TYPES = ['connections', 'link', 'node', 'enable', 'disable'];
 
 const MUTATE_CONNECTION_CHANCE = 0.25;
 const PERTUBE_CHANCE = 0.9;
@@ -56,7 +55,6 @@ export default class Genome {
     constructor() {
         this.genes = [];
         this.neurons = [];
-        this.maxNeuron = 0;
         this.mutationRates = {
             connections: MUTATE_CONNECTION_CHANCE,
             link: MUTATE_LINK_CHANCE,
@@ -69,6 +67,7 @@ export default class Genome {
         this.globalRank = 0;
         this.initializeNeurons();
         this.maxNeuron = INPUT_NEURONS;
+        this.totalRounds = 0;
     }
 
     load(genome) {
@@ -91,6 +90,10 @@ export default class Genome {
         clonedGenome.mutationRates = this.getMutationRates();
 
         return clonedGenome;
+    }
+
+    addFitness(fitness) {
+        this.fitness += fitness;
     }
 
     getMutationRates() {
@@ -143,14 +146,13 @@ export default class Genome {
 
         for (let i = 0; i < parent1.genes.length; i++) {
             let geneParent = parent1;
-            if (parent2Innovations[parent1.genes[i].innovation] != null
-                && Math.floor(Math.random() * 100) < PARENT2_INNOVATION_GENE_CHANCE
-                && parent2.genes[i].enabled) {
-                geneParent = parent2;
+            let gene1 = parent1.genes[i];
+            let gene2 = parent2Innovations[gene1.innovation];
+            if (gene2 != null && Math.floor(Math.random() * 100) < PARENT2_INNOVATION_GENE_CHANCE && gene2.enabled) {
+                this.genes.push(gene2.clone());
+            } else {
+                this.genes.push(gene1.clone())
             }
-
-            let gene = geneParent.genes[i].clone(); 
-            this.genes.push(gene);
         }
         
         this.maxNeuron = Math.max(parent1.maxNeuron, parent2.maxNeuron);
@@ -287,26 +289,26 @@ export default class Genome {
     }
 
     calculateWeights() {
-        const neuronsWithValues = this.neurons.filter((n) => n.value != 0).map((n) => n.id);
+        // const neuronsWithValues = this.neurons.filter((n) => n.value != 0).map((n) => n.id);
         // console.log("Neurons with values: ", neuronsWithValues);
         for (let i = 0; i < this.neurons.length; i++) {
             let neuron = this.neurons[i];
             if (!neuron) continue;
-            let sum = 0;
             if (neuron.incoming.length > 0) {
-                let incomingNeuronIds = neuron.incoming.map((i) => i.into); 
-                // console.log("Incoming neuron Ids: ", incomingNeuronIds);
-                let matchingNeurons = incomingNeuronIds.filter((id) => neuronsWithValues.includes(id))
-                if (matchingNeurons.length > 0) {
-                    // console.log("Found matching ids: ", matchingNeurons);
+                let sum = 0;
+            // if (neuron.incoming.length > 0) {
+            //     let incomingNeuronIds = neuron.incoming.map((i) => i.into); 
+            //     console.log("Incoming neuron Ids: ", incomingNeuronIds);
+            //     let matchingNeurons = incomingNeuronIds.filter((id) => neuronsWithValues.includes(id))
+            //     if (matchingNeurons.length > 0) {
+            //         console.log("Found matching ids: ", matchingNeurons);
+            //     }
+            // }
+                for (let j = 0; j < neuron.incoming.length; j++) {
+                    let incoming = neuron.incoming[j];
+                    let other = this.neurons[incoming.into];
+                    sum += incoming.weight * other.value;  
                 }
-            }
-            for (let j = 0; j < neuron.incoming.length; j++) {
-                let incoming = neuron.incoming[j];
-                let other = this.neurons[incoming.into];
-                sum += incoming.weight * other.value;  
-            }
-            if (neuron.incoming.length > 0) {
                 neuron.value = sigmoid(sum);
             }
         }

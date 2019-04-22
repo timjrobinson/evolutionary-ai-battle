@@ -14,7 +14,15 @@ export default class Species {
 
     // Go through all genomes and remove the unfittest 50%
     cull() {
+        this.genomes.sort((a, b) => {
+            return b.fitness - a.fitness;
+        });
 
+        const remainingGenomes = Math.ceil(this.genomes.length / 2);
+        console.log("Genomes before the cull: ", this.genomes);
+
+        this.genomes = this.genomes.slice(0, remainingGenomes)
+        console.log("Genomes after the cull: ", this.genomes);
     }
 
     // Go through genomes and check if any have surpassed the 
@@ -52,12 +60,13 @@ export default class Species {
     }
 
     createChild() {
+        let child = null;
         const shouldCreateCrossover = Math.floor(Math.random() * 100) < CROSSOVER_CHANCE;
         if (shouldCreateCrossover) {
-            const parent1 = getRandomGenome();
-            const parent2 = getRandomGenome();
+            const parent1 = this.getRandomGenome();
+            const parent2 = this.getRandomGenome();
 
-            const child = new Genome();
+            child = new Genome();
             if (parent1.fitness > parent2.fitness) {
                 child.inheritFromParents(parent1, parent2);
             } else {
@@ -68,7 +77,7 @@ export default class Species {
 
 
         } else {
-            const child = cloneRandomGenome();
+            child = this.cloneRandomGenome();
         }
 
         this.genomes.push(child);

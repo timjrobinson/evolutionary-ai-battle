@@ -4,48 +4,76 @@
  * are unfit, saving and loading genomes to disk etc. 
  */
 import Species from './species'
+import Genome from './genome';
 
-const INITIAL_SPECIES = 10;
-const INITIAL_GENOMES_PER_SPECIES = 10;
+import {
+    INPUT_NEURONS,
+    OUTPUT_NEURONS,
+    MAX_NEURONS
+} from './constants'
+
+const INITIAL_SPECIES = 3;
+const INITIAL_GENOMES_PER_SPECIES = 3;
 const POPULATION = 300;
 
-const ROUNDS_PER_GENOME = 10;
+const ROUNDS_PER_GENOME = 1;
 
 export default class Trainer {
     constructor() {
         this.maxFitness = 0;
         this.species = []
+        this.initializeSpecies();
     }
 
     initializeSpecies() {
         for (var i = 0; i < INITIAL_SPECIES; i++) {
             let species = new Species()
+            for (var j = 0; j < INITIAL_GENOMES_PER_SPECIES; j++) {
+                let genome = this.createNewGenome();
+                species.genomes.push(genome);
+            }
             this.species.push(species);
         }
+    }
+
+    createNewGenome() {
+        const genome = new Genome();
+        genome.mutate();
+        genome.initializeNeurons();
+        return genome;
     }
 
     /* Returns a random genome that hasn't had enough battles yet. 
     Genomes each do ROUNDS_PER_GENOME battles to determine their fitness
     */
     getRandomGenome() {
+        let genome = null;
+        while (genome == null || genome.totalRounds >= ROUNDS_PER_GENOME) {
+            genome = this.getRandomSpecies().getRandomGenome();
+        }
+        return genome;
+    }
 
+    getRandomSpecies() {
+        return this.species[Math.floor(Math.random() * this.species.length)];
     }
 
     /* Go through each species, eliminate all below average genomes in the species */
     cullSpecies() {
-
-
+        this.species.forEach((species) => {
+            species.cull();
+        });
     }
 
     rankGenomesGlobally() {
         const allGenomes = [];
-        this.species.forEach(function (species) {
-            species.genomes.forEach(function(genome) {
+        this.species.forEach((species) => {
+            species.genomes.forEach((genome) => {
                 allGenomes.push(genome);
             });
         });
 
-        allGenomes.sort(function (genomeA, genomeB) {
+        allGenomes.sort((genomeA, genomeB) => {
             return genomeA.fitness < genomeB.fitness;
         });
 
@@ -56,21 +84,21 @@ export default class Trainer {
     }
 
     removeStaleSpecies() {
-        this.species = this.species.filter(function (species) {
+        this.species = this.species.filter((species) => {
             let isStale = species.checkStale(this.maxFitness);
             return !isStale;
         });
     }
 
     calculateSpeciesAverageGlobalRank() {
-        this.species.forEach(function (species) {
+        this.species.forEach((species) => {
             species.calculateAverageGlobalRank()
         });
     }
 
     removeWeakSpecies() {
         let totalAverageGlobalRank = 0;
-        this.species.forEach(function (species) {
+        this.species.forEach((species) => {
             totalAverageGlobalRank += species.averageGlobalRank;
         });
 
@@ -97,6 +125,17 @@ export default class Trainer {
         this.calculateSpeciesAverageGlobalRank();
         this.removeWeakSpecies();
         this.createChildren();
+        console.log("New generation is: ", this.species);
+    }
+
+    getTotalRoundsRemaining() {
+        let totalRoundsRemaining = 0;
+        this.species.forEach(function(species) {
+            species.genomes.forEach(function(genome) {
+                totalRoundsRemaining += ROUNDS_PER_GENOME - genome.totalRounds;
+            })
+        });
+        return totalRoundsRemaining;
     }
 
 }

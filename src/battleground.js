@@ -22,11 +22,16 @@ const MIN_Y_POS = 0 + BOT_RADIUS;
 const MAX_X_POS = MAP_WIDTH - BOT_RADIUS;
 const MAX_Y_POS = MAP_HEIGHT - BOT_RADIUS;
 
+const NO_ACTION_TIMEOUT = 5;
+
 class Battleground {
     constructor() {
         this.bots = [];
         this.botActions = [];
         this.bullets = [];
+        this.onEnd = null;
+        this.winner = null;
+        this.lastActionTime = null;
     }
 
     addBots(bot1, bot2) {
@@ -34,12 +39,35 @@ class Battleground {
         this.bots.push(bot2)
     }
 
-    start() {
+    start(onEnd) {
         console.log("Starting battleground");
+        this.onEnd = onEnd;
+        this.startTime = Date.now();
         this.lastUpdate = Date.now();
-        setInterval(this.updateBots.bind(this), TICK_TIME);
-        setInterval(this.update.bind(this), 10);
-        setInterval(this.draw.bind(this), 10);
+        this.lastActionTime = Date.now();
+        this.updateBots();
+        this.updateBotsInterval = setInterval(this.updateBots.bind(this), TICK_TIME);
+        this.updateInterval = setInterval(this.update.bind(this), 10);
+        this.drawInterval = setInterval(this.draw.bind(this), 10);
+    }
+
+    end() {
+        if (!this.onEnd) return;
+
+        clearInterval(this.updateBotsInterval);
+        clearInterval(this.updateInterval);
+        clearInterval(this.drawInterval);
+
+        this.endTime = Date.now();
+        const totalTime = (this.endTime - this.startTime) / 1000;
+        const results = {
+            startTime: this.startTime,
+            endTime: this.endTime,
+            totalTime,
+            winner: this.winner
+        };
+        this.onEnd(results);
+        this.onEnd = null;
     }
 
     updateBot(bot, otherBot) {
@@ -62,16 +90,25 @@ class Battleground {
     updateBots() {
         this.botActions[0] = this.updateBot(this.bots[0], this.bots[1]);
         this.botActions[1] = this.updateBot(this.bots[1], this.bots[0]);
+        if (this.botDidActions(this.botActions[0]) || this.botDidActions(this.botActions[1])) {
+            this.lastActionTime = Date.now()
+        }
+        if ((Date.now() - this.lastActionTime) / 1000 > NO_ACTION_TIMEOUT) {
+            this.end();
+        }
+    }
+
+    botDidActions(botActions) {
+        return botActions.dx != 0 || botActions.dy != 0 || botActions.dh != 0 || botActions.ds != 0;
     }
 
     update() {
         const delta = (Date.now() - this.lastUpdate) / 1000;
         this.lastUpdate = Date.now();
-        const emptyBotActions = {dx: 0, dy: 0, dh: 0, ds: false}
 
         for (var i = 0; i < this.bots.length; i++) {
             const bot = this.bots[i];
-            const botActions = this.botActions[i] || emptyBotActions;
+            const botActions = this.botActions[i];
             const otherBot = i == 0 ? this.bots[1] : this.bots[0];
 
             const xMovement = Math.min(botActions.dx, MAX_SPEED) * delta;
@@ -88,7 +125,7 @@ class Battleground {
                 bot.rotation += 360;
             }
 
-            bot.bullets.forEach(function(bullet) {
+            bot.bullets.forEach((bullet) => {
                 const xDistance = BULLET_SPEED * Math.cos(bullet.rotation * Math.PI / 180) * delta
                 const yDistance = BULLET_SPEED * Math.sin(bullet.rotation * Math.PI / 180) * delta
                 bullet.xPos += xDistance;
@@ -103,6 +140,10 @@ class Battleground {
                 if (distanceBetweenPoints(bullet.xPos, bullet.yPos, otherBot.xPos, otherBot.yPos) < (BULLET_RADIUS + BOT_RADIUS)) {
                     otherBot.lives -= 1;
                     console.log("Bot " + otherBot.id + " hit! Now has " + otherBot.lives + " lives left.");
+                    if (otherBot.lives <= 0) {
+                        this.winner = bot.id;
+                        return this.end();
+                    }
                     bullet.dead = true;
                 }
             });

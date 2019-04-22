@@ -19,26 +19,27 @@ import {
 class Bot {
     constructor(id) {
         this.id = id;
-        this.xPos = 450;
+        this.xPos = 350;
         this.yPos = 150;
-        this.rotation = 90;
+        this.rotation = 0;
         this.bullets = [];
         this.lives = STARTING_LIVES;
         this.genome = new Genome();
 
         if (this.id > 1) {
-            this.xPos = 650;
+            this.xPos = 750;
             this.rotation = 180;
         }
 
     }
 
     loadGenome(genome) {
-        this.genome.load(genome);
+        this.genome = genome;
     }
 
     createOutputObject() {
-        if (this.id == 2) return this.createRandomOutputObject();
+        // if (this.id == 2) return this.createRandomOutputObject();
+        if (this.id == 2) return this.createStandAndShootOutputObject();
         // There should be a total of 16 output nodes, 5 bits for each movement / rotation and another bit on if it should shoot or not
         const neurons = this.genome.neurons;
         const outputNeurons = neurons.slice(MAX_NEURONS, neurons.length);
@@ -59,7 +60,16 @@ class Bot {
             dx: Math.floor(Math.random() * 30) - 15,
             dy: Math.floor(Math.random() * 30) - 15,
             dh: Math.floor(Math.random() * 30) - 15,
-            ds: Math.random() < 0.4
+            ds: Math.random() < 0.1
+        }
+    }
+
+    createStandAndShootOutputObject() {
+        return {
+            dx: 0,
+            dy: 0,
+            dh: 0,
+            ds: Math.random() < 0.1
         }
     }
 
@@ -171,8 +181,6 @@ class Bot {
     }
 
     update(inputs) {
-        this.genome.mutate();
-        this.genome.initializeNeurons();
         this.updateNetwork(inputs);
         this.calculateWeights();
         return this.createOutputObject()
