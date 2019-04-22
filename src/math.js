@@ -50,4 +50,10 @@ export function multiplyMatrixAndPoint(matrix, point) {
     var resultY = (x * matrix[1][0]) + (y * matrix[1][1]) + (w * matrix[1][2]);
     
     return [resultX, resultY];
-  }
+}
+
+export function sigmoid(value) {
+    // return 1 / (1 + Math.pow(Math.E, -value));
+
+    return 2 / (1 + Math.exp(-4.9 * value)) - 1;
+}

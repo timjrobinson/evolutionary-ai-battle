@@ -1,32 +1,16 @@
-import { translateMatrix, rotateAroundPoint, degreesToRadians, multiplyMatrixAndPoint } from './math';
+import { translateMatrix, rotateAroundPoint, degreesToRadians, sigmoid } from './math';
+import Genome from './genome';
 
-const MAX_NEURONS = 10e5;
-const MAP_WIDTH = 1000; 
-const MAP_HEIGHT = 500; 
-
-// The brain is 2x the size of the map because the player is centered in the brain 
-// so if player is in top left and other in bottom right it needs enough room to show them
-const BRAIN_WIDTH = MAP_WIDTH * 2; 
-const BRAIN_HEIGHT = MAP_HEIGHT * 2;
-
-const BRAIN_CANVAS_WIDTH = 400;
-
-const BOT_SIZE = 25;
-const BULLET_SIZE = 10;
-
-const NN_SQUARE_SIZE = 25;
-const BRAIN_CANVAS_SCALE = (BRAIN_CANVAS_WIDTH / (BRAIN_WIDTH / NN_SQUARE_SIZE)); 
-
-const CENTER_X_POS = MAP_WIDTH / 2;
-const CENTER_Y_POS = MAP_HEIGHT / 2;
-
-const INPUT_WIDTH = BRAIN_WIDTH / NN_SQUARE_SIZE;
-const INPUT_HEIGHT = BRAIN_HEIGHT / NN_SQUARE_SIZE;
-const INPUT_NEURONS = INPUT_WIDTH * INPUT_HEIGHT;
-
-const OUTPUT_NEURONS = 16;
-
-const STARTING_LIVES = 5;
+import {
+    MAP_WIDTH,
+    MAP_HEIGHT,
+    BRAIN_CANVAS_SCALE,
+    INPUT_WIDTH,
+    NN_SQUARE_SIZE,
+    MAX_NEURONS,
+    INPUT_NEURONS,
+    STARTING_LIVES,
+} from './constants'
 
 /* Codespace = {
     dx, dy, dh, ds, xPos, yPos, rotation, bullets, otherPlayer
@@ -40,55 +24,33 @@ class Bot {
         this.rotation = 90;
         this.bullets = [];
         this.lives = STARTING_LIVES;
+        this.genome = new Genome();
 
         if (this.id > 1) {
             this.xPos = 650;
             this.rotation = 180;
         }
 
-        this.initializeNeurons();
-    }
-
-    initializeGenome() {
-        this.genes = [];
     }
 
     loadGenome(genome) {
-        genome.genes.forEach(function (gene) {
-            this.genes.push(Object.assign({}, gene));
-        });
-
-        initializeNeurons()
-    }
-
-    createNeuron() {
-        return {
-            sum: 0
-        };
-    }
-
-    initializeNeurons() {
-        this.neurons = [];
-
-        for (let i = 0; i < INPUT_NEURONS; i++) {
-            this.neurons.push(this.createNeuron())
-        }
-
-        for (let i = 0; i < INPUT_NEURONS; i++) {
-            this.neurons[MAX_NEURONS+i] = this.createNeuron();
-        }
+        this.genome.load(genome);
     }
 
     createOutputObject() {
-
         // There should be a total of 16 output nodes, 5 bits for each movement / rotation and another bit on if it should shoot or not
+        const neurons = this.genome.neurons;
+        const outputNeurons = neurons.slice(MAX_NEURONS, neurons.length);
+        const outputValues = outputNeurons.map((neuron) => {
+            return neuron.value > 0 ? 1 : 0;
+        });
         return {
-            dx: Math.round(Math.random() * 30) - 14, // -15 -> 15, 5 bit object
-            dy: Math.round(Math.random() * 30) - 14, // -15 -> 15, 5 bit object
-            dh: Math.round(Math.random() * 30) - 14, // -15 -> 15, 5 bit object
-            ds: Math.round(Math.random()),
+            // First bit is if it's negative, other 4 bits are 0 -> 15
+            dx: (outputValues[0] * -1) * (outputValues[1] * 1 + outputValues[2] * 2 + outputValues[3] * 4 + outputValues[4] * 8), 
+            dy: (outputValues[5] * -1) * (outputValues[6] * 1 + outputValues[7] * 2 + outputValues[8] * 4 + outputValues[9] * 8), 
+            dh: (outputValues[10] * -1) * (outputValues[11] * 1 + outputValues[12] * 2 + outputValues[13] * 4 + outputValues[14] * 8), 
+            ds: outputValues[15] 
         }
-
     }
 
     updateNetwork(inputs) {
@@ -130,8 +92,9 @@ class Bot {
     }
 
     setInputNeurons(translatedPositions) {
+        const neurons = this.genome.neurons;
         for (let i = 0; i < INPUT_NEURONS; i++) {
-            this.neurons[i].value = 0;
+            neurons[i].value = 0;
             let currentSquare = {
                 minX: Math.floor(i % INPUT_WIDTH) * NN_SQUARE_SIZE,
                 maxX: (Math.floor(i % INPUT_WIDTH) + 1) * NN_SQUARE_SIZE,
@@ -140,12 +103,12 @@ class Bot {
             }
             if (translatedPositions.xPos > currentSquare.minX && translatedPositions.xPos < currentSquare.maxX
                 && translatedPositions.yPos > currentSquare.minY && translatedPositions.yPos < currentSquare.maxY) {
-                this.neurons[i].value = 1;
+                neurons[i].value = 1;
             }
             translatedPositions.bullets.forEach((bullet) => {
                 if (bullet.xPos > currentSquare.minX && bullet.xPos < currentSquare.maxX
                     && bullet.yPos > currentSquare.minY && bullet.yPos < currentSquare.maxY) {
-                    this.neurons[i].value = -1;
+                    neurons[i].value = -1;
                 }
             });
         }
@@ -155,10 +118,7 @@ class Bot {
     /* This gets the current inputs, and makes their input flow down the network
     to get to the outputs and figure out what output to press */
     calculateWeights() {
-        console.log("Neurons length is: " + this.neurons.length);
-        for (let i = 0; i < this.neurons.length; i++) {
-
-        }
+        this.genome.calculateWeights();
     }
 
     drawBrainView(translatedPositions) {

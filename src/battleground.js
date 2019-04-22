@@ -36,6 +36,7 @@ class Battleground {
 
     start() {
         console.log("Starting battleground");
+        this.lastUpdate = Date.now();
         setInterval(this.updateBots.bind(this), TICK_TIME);
         setInterval(this.update.bind(this), 10);
         setInterval(this.draw.bind(this), 10);
@@ -66,10 +67,11 @@ class Battleground {
     update() {
         const delta = (Date.now() - this.lastUpdate) / 1000;
         this.lastUpdate = Date.now();
+        const emptyBotActions = {dx: 0, dy: 0, dh: 0, ds: false}
 
         for (var i = 0; i < this.bots.length; i++) {
             const bot = this.bots[i];
-            const botActions = this.botActions[i];
+            const botActions = this.botActions[i] || emptyBotActions;
             const otherBot = i == 0 ? this.bots[1] : this.bots[0];
 
             const xMovement = Math.min(botActions.dx, MAX_SPEED) * delta;
