@@ -32,7 +32,7 @@ export default class Species {
         let maxFitness = 0;
 
         this.genomes.forEach(function (genome) {
-            maxFitness = Math.max(maxFitness, genome.maxFitness);
+            maxFitness = Math.max(maxFitness, genome.fitness);
         });
 
         if (maxFitness <= this.maxFitness && maxFitness <= overallMaxFitness) {

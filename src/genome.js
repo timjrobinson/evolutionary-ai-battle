@@ -25,8 +25,8 @@ const STEP_SIZE = 0.1;
 
 class Gene {
     constructor() {
-        this.into = null;
-        this.out = null;
+        this.from = null;
+        this.to = null;
         this.weight = 0;
         this.enabled = true;
         this.innovation = 0;
@@ -34,8 +34,8 @@ class Gene {
 
     clone() {
         const gene = new Gene();
-        gene.into = this.into; 
-        gene.out = this.out;
+        gene.from = this.from; 
+        gene.to = this.to;
         gene.weight = this.weight;
         gene.enabled = this.enabled;
         gene.innovation = this.innovation;
@@ -119,13 +119,13 @@ export default class Genome {
         this.genes.forEach((gene) => {
             if (!gene.enabled) return;
 
-            if (this.neurons[gene.out] == null) {
-                this.neurons[gene.out] = new Neuron(gene.out);
+            if (this.neurons[gene.to] == null) {
+                this.neurons[gene.to] = new Neuron(gene.to);
             }
-            this.neurons[gene.out].incoming.push(gene);
+            this.neurons[gene.to].incoming.push(gene);
 
-            if (this.neurons[gene.into] == null) {
-                this.neurons[gene.into] = new Neuron(gene.into);
+            if (this.neurons[gene.from] == null) {
+                this.neurons[gene.from] = new Neuron(gene.from);
             }
         });
     }
@@ -190,7 +190,7 @@ export default class Genome {
 
     hasSameGene(gene) {
         const hasGene = this.genes.some(function(g) {
-            if (g.into === gene.into && g.out === gene.out) {
+            if (g.from === gene.from && g.to === gene.to) {
                 return true
             }
             return false;
@@ -222,8 +222,8 @@ export default class Genome {
             return;
         }
 
-        gene.into = neuron1.id;
-        gene.out = neuron2.id;
+        gene.from = neuron1.id;
+        gene.to = neuron2.id;
         if (this.hasSameGene(gene)) {
             // Don't want two links betwen the same pair of neurons
             return;
@@ -255,14 +255,14 @@ export default class Genome {
         const neuronId = this.maxNeuron;
 
         const gene1 = gene.clone();
-        gene1.out = neuronId;
+        gene1.to = neuronId;
         gene1.weight = 1;
         gene1.innovation = this.newInnovation()
         gene1.enabled = true;
         this.genes.push(gene1);
 
         const gene2 = gene.clone();
-        gene2.into = neuronId;
+        gene2.from = neuronId;
         gene2.weight = 1;
         gene2.innovation = this.newInnovation()
         gene2.enabled = true;
@@ -297,7 +297,7 @@ export default class Genome {
             if (neuron.incoming.length > 0) {
                 let sum = 0;
             // if (neuron.incoming.length > 0) {
-            //     let incomingNeuronIds = neuron.incoming.map((i) => i.into); 
+            //     let incomingNeuronIds = neuron.incoming.map((i) => i.from); 
             //     console.log("Incoming neuron Ids: ", incomingNeuronIds);
             //     let matchingNeurons = incomingNeuronIds.filter((id) => neuronsWithValues.includes(id))
             //     if (matchingNeurons.length > 0) {
@@ -306,7 +306,7 @@ export default class Genome {
             // }
                 for (let j = 0; j < neuron.incoming.length; j++) {
                     let incoming = neuron.incoming[j];
-                    let other = this.neurons[incoming.into];
+                    let other = this.neurons[incoming.from];
                     sum += incoming.weight * other.value;  
                 }
                 neuron.value = sigmoid(sum);

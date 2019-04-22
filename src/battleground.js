@@ -139,7 +139,7 @@ class Battleground {
 
                 if (distanceBetweenPoints(bullet.xPos, bullet.yPos, otherBot.xPos, otherBot.yPos) < (BULLET_RADIUS + BOT_RADIUS)) {
                     otherBot.lives -= 1;
-                    console.log("Bot " + otherBot.id + " hit! Now has " + otherBot.lives + " lives left.");
+                    // console.log("Bot " + otherBot.id + " hit! Now has " + otherBot.lives + " lives left.");
                     if (otherBot.lives <= 0) {
                         this.winner = bot.id;
                         return this.end();

@@ -14,7 +14,7 @@ import {
 
 const INITIAL_SPECIES = 3;
 const INITIAL_GENOMES_PER_SPECIES = 3;
-const POPULATION = 300;
+const POPULATION = 100;
 
 const ROUNDS_PER_GENOME = 1;
 
@@ -51,6 +51,7 @@ export default class Trainer {
         while (genome == null || genome.totalRounds >= ROUNDS_PER_GENOME) {
             genome = this.getRandomSpecies().getRandomGenome();
         }
+        console.log("New Genome genes: ", genome.genes);
         return genome;
     }
 
@@ -73,10 +74,11 @@ export default class Trainer {
             });
         });
 
-        allGenomes.sort((genomeA, genomeB) => {
-            return genomeA.fitness < genomeB.fitness;
+        allGenomes.sort((a, b) => {
+            return a.fitness - b.fitness;
         });
 
+        // Global rank is from 1 = worst to allGenomes.length = best
         for (var i = 0; i < allGenomes.length; i++) {
             allGenomes[i].globalRank = i;
         }
@@ -90,6 +92,13 @@ export default class Trainer {
         });
     }
 
+    calculateGlobalMaxFitness() {
+        this.maxFitness = this.species.reduce((maxFitness, species) => {
+            return Math.max(maxFitness, species.maxFitness || 0);
+        }, this.maxFitness)
+        console.log("Global max fitness is now: ", this.maxFitness);
+    }
+
     calculateSpeciesAverageGlobalRank() {
         this.species.forEach((species) => {
             species.calculateAverageGlobalRank()
@@ -101,6 +110,8 @@ export default class Trainer {
         this.species.forEach((species) => {
             totalAverageGlobalRank += species.averageGlobalRank;
         });
+
+        console.log("Removing weak species. TAGR: ", totalAverageGlobalRank, " species: ", this.species);
 
         this.species = this.species.map(function(species) {
             species.breed = Math.floor((species.averageGlobalRank / totalAverageGlobalRank) * POPULATION);
@@ -121,6 +132,7 @@ export default class Trainer {
         this.cullSpecies();
         this.rankGenomesGlobally();
         this.removeStaleSpecies();
+        this.calculateGlobalMaxFitness();
         this.rankGenomesGlobally();
         this.calculateSpeciesAverageGlobalRank();
         this.removeWeakSpecies();
