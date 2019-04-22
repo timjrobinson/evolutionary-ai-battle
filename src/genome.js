@@ -12,9 +12,11 @@ import {
 const INITIAL_MUTATION_RATE = 1;
 
 const PARENT2_INNOVATION_GENE_CHANCE = 50;
-const MUTATION_TYPES = ['connections', 'link', 'bias', 'node', 'enable', 'disable'];
+// const MUTATION_TYPES = ['connections', 'link', 'node', 'enable', 'disable'];
+const MUTATION_TYPES = ['link'];
 
 const MUTATE_CONNECTION_CHANCE = 0.25;
+const PERTUBE_CHANCE = 0.9;
 const MUTATE_LINK_CHANCE = 2;
 const MUTATE_NODE_CHANCE = 0.5;
 const MUTATE_BIAS_CHANCE = 0.4;
@@ -46,7 +48,6 @@ class Neuron {
     constructor(id) {
         this.id = id;
         this.incoming = [];
-        this.outgoing = [];
         this.value = 0;
     }
 }
@@ -59,7 +60,6 @@ export default class Genome {
         this.mutationRates = {
             connections: MUTATE_CONNECTION_CHANCE,
             link: MUTATE_LINK_CHANCE,
-            bias: MUTATE_BIAS_CHANCE,
             node: MUTATE_NODE_CHANCE,
             enable: MUTATE_ENABLE_CHANCE,
             disable: MUTATE_DISABLE_CHANCE,
@@ -68,6 +68,7 @@ export default class Genome {
         this.fitness = 0;
         this.globalRank = 0;
         this.initializeNeurons();
+        this.maxNeuron = INPUT_NEURONS;
     }
 
     load(genome) {
@@ -78,6 +79,7 @@ export default class Genome {
             this.genes.push(gene.clone());
         });
         this.initializeNeurons();
+        this.maxNeuron = genome.maxNeuron;
     }
 
     clone() {
@@ -93,6 +95,10 @@ export default class Genome {
 
     getMutationRates() {
         return Object.assign({}, this.mutationRates);
+    }
+
+    newInnovation() {
+        return 0;
     }
 
     initializeNeurons() {
@@ -156,50 +162,153 @@ export default class Genome {
     mutate() {
         const mutationType = MUTATION_TYPES[Math.floor(Math.random() * MUTATION_TYPES.length)];
         const mutationFunctions = {
+            connections: this.pointMutate,
             link: this.linkMutate,
             node: this.nodeMutate,
             enable: this.enableMutate,
             disable: this.disableMutate
         }
 
-        mutationFunctions[mutationType]();
+        mutationFunctions[mutationType].call(this);
     }
 
     getRandomNeuron(nonInput) {
         let startingId = nonInput ? INPUT_NEURONS : 0
+        const pickableNeurons = this.neurons.map((neuron) => {
+            if (neuron.id >= startingId) return neuron;
+            return null;
+        }).filter((n) => { return n != null });
+        const neuronId = pickableNeurons[Math.floor(Math.random() * pickableNeurons.length)].id;
+        return this.neurons[neuronId];
+    }
+
+    getRandomGene() {
+        return this.genes[Math.floor(Math.random() * this.genes.length)];
+    }
+
+    hasSameGene(gene) {
+        const hasGene = this.genes.some(function(g) {
+            if (g.into === gene.into && g.out === gene.out) {
+                return true
+            }
+            return false;
+        });
+        return hasGene;
+    }
+
+    pointMutate() {
+        const step = this.mutationRates.step;
+
+        this.genes = this.genes.map((gene) => {
+            if (Math.random() < PERTUBE_CHANCE) {
+                gene.weight = gene.weight + Math.random() * step*2 - step;
+            } else {
+                gene.weight = Math.random() * 4 - 2;
+            }
+            return gene;
+        });
     }
 
     linkMutate() {
-        const neuron1 = this.getRandomNeuron(false)
-        const neuron2 = this.getRandomNeuron(true)
+        // console.log("Performing link mutation");
+        let neuron1 = this.getRandomNeuron(false)
+        let neuron2 = this.getRandomNeuron(true)
 
         const gene = new Gene()
+        if (neuron1.id < INPUT_NEURONS && neuron2.id < INPUT_NEURONS) {
+            // Both input nodes, we can't link these
+            return;
+        }
 
+        gene.into = neuron1.id;
+        gene.out = neuron2.id;
+        if (this.hasSameGene(gene)) {
+            // Don't want two links betwen the same pair of neurons
+            return;
+        }
+
+        gene.innovation = this.newInnovation()
+        gene.weight = Math.random() * 4 - 2;
+
+        // console.log("Inserting new gene: ", gene);
+        this.genes.push(gene);
     }
 
+    /* Takes a random gene, disables it, then creates a
+    a new neuron with 2 new genes, one gene going to the old genes
+    input and one to the old genes output. */
     nodeMutate() {
+        // console.log("Performing node mutation");
+        if (this.genes.length == 0) {
+            return;
+        }
 
+        const gene = this.getRandomGene();
+        if (!gene.enabled) {
+            return;
+        }
+        gene.enabled = false;
+
+        this.maxNeuron++;
+        const neuronId = this.maxNeuron;
+
+        const gene1 = gene.clone();
+        gene1.out = neuronId;
+        gene1.weight = 1;
+        gene1.innovation = this.newInnovation()
+        gene1.enabled = true;
+        this.genes.push(gene1);
+
+        const gene2 = gene.clone();
+        gene2.into = neuronId;
+        gene2.weight = 1;
+        gene2.innovation = this.newInnovation()
+        gene2.enabled = true;
+        this.genes.push(gene2);
+
+        // console.log("Inserting new gene1: ", gene1);
+        // console.log("Inserting new gene2: ", gene2);
     }
 
     enableMutate() {
-
+        // console.log("Performing enableMutate");
+        if (this.genes.length == 0) return;
+        const gene = this.getRandomGene();
+        // console.log("Enabling gene: ", gene);
+        gene.enabled = true;
     }
 
     disableMutate() {
-
+        // console.log("Performing disableMutate");
+        if (this.genes.length == 0) return;
+        const gene = this.getRandomGene();
+        // console.log("Disabling gene:", gene);
+        gene.enabled = false;
     }
 
     calculateWeights() {
+        const neuronsWithValues = this.neurons.filter((n) => n.value != 0).map((n) => n.id);
+        // console.log("Neurons with values: ", neuronsWithValues);
         for (let i = 0; i < this.neurons.length; i++) {
             let neuron = this.neurons[i];
             if (!neuron) continue;
             let sum = 0;
+            if (neuron.incoming.length > 0) {
+                let incomingNeuronIds = neuron.incoming.map((i) => i.into); 
+                // console.log("Incoming neuron Ids: ", incomingNeuronIds);
+                let matchingNeurons = incomingNeuronIds.filter((id) => neuronsWithValues.includes(id))
+                if (matchingNeurons.length > 0) {
+                    // console.log("Found matching ids: ", matchingNeurons);
+                }
+            }
             for (let j = 0; j < neuron.incoming.length; j++) {
                 let incoming = neuron.incoming[j];
                 let other = this.neurons[incoming.into];
                 sum += incoming.weight * other.value;  
             }
-            neuron.value = sigmoid(sum);
+            if (neuron.incoming.length > 0) {
+                neuron.value = sigmoid(sum);
+            }
         }
     }
 }
