@@ -9,9 +9,11 @@ import {
     sigmoid
 } from './math'
 
+import Innovation from './innovation'
+
 const INITIAL_MUTATION_RATE = 1;
 
-const PARENT2_INNOVATION_GENE_CHANCE = 50;
+const PARENT2_INNOVATION_GENE_CHANCE = 0.5;
 const MUTATION_TYPES = ['connections', 'link', 'node', 'enable', 'disable'];
 
 const MUTATE_CONNECTION_CHANCE = 0.25;
@@ -148,7 +150,7 @@ export default class Genome {
             let geneParent = parent1;
             let gene1 = parent1.genes[i];
             let gene2 = parent2Innovations[gene1.innovation];
-            if (gene2 != null && Math.floor(Math.random() * 100) < PARENT2_INNOVATION_GENE_CHANCE && gene2.enabled) {
+            if (gene2 != null && Math.random() < PARENT2_INNOVATION_GENE_CHANCE && gene2.enabled) {
                 this.genes.push(gene2.clone());
             } else {
                 this.genes.push(gene1.clone())
@@ -162,16 +164,50 @@ export default class Genome {
     /* Chance of applying a random mutation to the child based on
     its mutation rate */
     mutate() {
-        const mutationType = MUTATION_TYPES[Math.floor(Math.random() * MUTATION_TYPES.length)];
-        const mutationFunctions = {
-            connections: this.pointMutate,
-            link: this.linkMutate,
-            node: this.nodeMutate,
-            enable: this.enableMutate,
-            disable: this.disableMutate
+        Object.keys(this.mutationRates).forEach((mutationType) => {
+            const currentRate = this.mutationRates[mutationType];
+            if (Math.random() < 0.5) {
+                this.mutationRates[mutationType] = currentRate * 0.95;
+            } else {
+                this.mutationRates[mutationType] = currentRate * (1 / 0.95);
+            }
+        });
+
+        if (Math.random() < this.mutationRates['connections']) {
+            this.pointMutate();
         }
 
-        mutationFunctions[mutationType].call(this);
+        let linkMutations = this.mutationRates['link'];
+        while (linkMutations > 0) {
+            if (Math.random() < linkMutations) {
+                this.linkMutate();
+            }
+            linkMutations -= 1;
+        }
+
+        let nodeMutations = this.mutationRates['node'];
+        while (nodeMutations > 0) {
+            if (Math.random() < nodeMutations) {
+                this.nodeMutate();
+            }
+            nodeMutations -= 1;
+        }
+
+        let enableMutations = this.mutationRates['enable'];
+        while (enableMutations > 0) {
+            if (Math.random() < enableMutations) {
+                this.enableMutate();
+            }
+            enableMutations -= 1;
+        }
+
+        let disableMutations = this.mutationRates['disable'];
+        while (disableMutations > 0) {
+            if (Math.random() < disableMutations) {
+                this.disableMutate();
+            }
+            disableMutations -= 1;
+        }
     }
 
     getRandomNeuron(nonInput) {
@@ -203,7 +239,7 @@ export default class Genome {
 
         this.genes = this.genes.map((gene) => {
             if (Math.random() < PERTUBE_CHANCE) {
-                gene.weight = gene.weight + Math.random() * step*2 - step;
+                gene.weight = gene.weight + Math.random() * step * 2 - step;
             } else {
                 gene.weight = Math.random() * 4 - 2;
             }
@@ -222,14 +258,20 @@ export default class Genome {
             return;
         }
 
-        gene.from = neuron1.id;
-        gene.to = neuron2.id;
+        if (neuron1.id < neuron2.id) {
+            gene.from = neuron1.id;
+            gene.to = neuron2.id;
+        } else {
+            gene.from = neuron2.id;
+            gene.to = neuron1.id;
+        }
+
         if (this.hasSameGene(gene)) {
             // Don't want two links betwen the same pair of neurons
             return;
         }
 
-        gene.innovation = this.newInnovation()
+        gene.innovation = Innovation.getNext();
         gene.weight = Math.random() * 4 - 2;
 
         // console.log("Inserting new gene: ", gene);
@@ -257,14 +299,14 @@ export default class Genome {
         const gene1 = gene.clone();
         gene1.to = neuronId;
         gene1.weight = 1;
-        gene1.innovation = this.newInnovation()
+        gene1.innovation = Innovation.getNext()
         gene1.enabled = true;
         this.genes.push(gene1);
 
         const gene2 = gene.clone();
         gene2.from = neuronId;
         gene2.weight = 1;
-        gene2.innovation = this.newInnovation()
+        gene2.innovation = Innovation.getNext();
         gene2.enabled = true;
         this.genes.push(gene2);
 

@@ -16,6 +16,24 @@ export const INPUT_WIDTH = BRAIN_WIDTH / NN_SQUARE_SIZE;
 export const INPUT_HEIGHT = BRAIN_HEIGHT / NN_SQUARE_SIZE;
 export const INPUT_NEURONS = INPUT_WIDTH * INPUT_HEIGHT;
 
-export const OUTPUT_NEURONS = 16;
+export const OUTPUT_NEURONS = 7;
 
 export const STARTING_LIVES = 5;
+
+export const TICK_TIME = 75;
+
+export const BOT_SIZE = 36;
+export const MAX_SPEED = 15;
+// export const MOVE_SPEED_MULTIPLIER = 2;
+
+export const BULLET_SIZE = 20;
+export const BULLET_SPEED = 20;
+
+export const PLAYER1_START_X = 36;
+export const PLAYER1_START_Y = 350;
+export const PLAYER1_START_ROTATION = 0;
+
+export const PLAYER2_START_X = 964;
+export const PLAYER2_START_Y = 350;
+export const PLAYER2_START_ROTATION = 180;
+

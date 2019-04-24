@@ -10,6 +10,13 @@ import {
     MAX_NEURONS,
     INPUT_NEURONS,
     STARTING_LIVES,
+    PLAYER1_START_X,
+    PLAYER1_START_Y,
+    PLAYER1_START_ROTATION,
+    PLAYER2_START_X,
+    PLAYER2_START_Y,
+    PLAYER2_START_ROTATION,
+    MAX_SPEED
 } from './constants'
 
 /* Codespace = {
@@ -19,16 +26,17 @@ import {
 class Bot {
     constructor(id) {
         this.id = id;
-        this.xPos = 350;
-        this.yPos = 150;
-        this.rotation = 0;
+        this.xPos = PLAYER1_START_X;
+        this.yPos = PLAYER1_START_Y;
+        this.rotation = PLAYER1_START_ROTATION;
         this.bullets = [];
         this.lives = STARTING_LIVES;
         this.genome = new Genome();
 
         if (this.id > 1) {
-            this.xPos = 750;
-            this.rotation = 180;
+            this.xPos = PLAYER2_START_X;
+            this.yPos = PLAYER2_START_Y;
+            this.rotation = PLAYER2_START_ROTATION;
         }
 
     }
@@ -38,20 +46,42 @@ class Bot {
     }
 
     createOutputObject() {
-        // if (this.id == 2) return this.createRandomOutputObject();
-        if (this.id == 2) return this.createStandAndShootOutputObject();
+        if (this.id == 2) {
+            const randomMethod = Math.floor(Math.random() * 4);
+            switch (randomMethod) {
+                case 0: return this.createRandomOutputObject();
+                case 1: return this.createStandAndShootOutputObject();
+                case 2: return this.createMoveVerticalAndShootOutputObject();
+                default: return this.createSpinAndShootOutputObject();
+            }
+        }
         // There should be a total of 16 output nodes, 5 bits for each movement / rotation and another bit on if it should shoot or not
         const neurons = this.genome.neurons;
         const outputNeurons = neurons.slice(MAX_NEURONS, neurons.length);
         const outputValues = outputNeurons.map((neuron) => {
             return neuron.value > 0 ? 1 : 0;
         });
+
+        // First bit is if it's negative, other 4 bits are 0 -> 15
+        // let dx = outputValues[0] == 0 ? -1 : 1; 
+        // dx *= (outputValues[1] * 1 + outputValues[2] * 2 + outputValues[3] * 4 + outputValues[4] * 8);
+        // let dy = outputValues[5] == 0 ? -1 : 1;
+        // dy *= (outputValues[6] * 1 + outputValues[7] * 2 + outputValues[8] * 4 + outputValues[9] * 8);
+        // let dh = outputValues[10] == 0 ? -1 : 1;
+        // dh *=  (outputValues[11] * 1 + outputValues[12] * 2 + outputValues[13] * 4 + outputValues[14] * 8);
+
+        let dx = outputValues[0] == 0 ? -1 : 1;
+        dx *= (outputValues[1] * MAX_SPEED)
+        let dy = outputValues[2] == 0 ? -1 : 1;
+        dy *= (outputValues[3] * MAX_SPEED)
+        let dh = outputValues[4] == 0 ? -1 : 1;
+        dh *= (outputValues[5] * MAX_SPEED)
+
         return {
-            // First bit is if it's negative, other 4 bits are 0 -> 15
-            dx: (outputValues[0] * -1) * (outputValues[1] * 1 + outputValues[2] * 2 + outputValues[3] * 4 + outputValues[4] * 8), 
-            dy: (outputValues[5] * -1) * (outputValues[6] * 1 + outputValues[7] * 2 + outputValues[8] * 4 + outputValues[9] * 8), 
-            dh: (outputValues[10] * -1) * (outputValues[11] * 1 + outputValues[12] * 2 + outputValues[13] * 4 + outputValues[14] * 8), 
-            ds: outputValues[15] 
+            dx, 
+            dy, 
+            dh, 
+            ds: outputValues[6] 
         }
     }
 
@@ -73,8 +103,28 @@ class Bot {
         }
     }
 
+    createMoveVerticalAndShootOutputObject() {
+        return {
+            dx: 0,
+            dy: 15 * Math.floor(Math.random() * 2) - 1,
+            dh: 0,
+            ds: Math.random() < 0.05
+        }
+    }
+
+    createSpinAndShootOutputObject() {
+        return {
+            ds: true,
+            dh: 5,
+            dy: this.otherPlayer.yPos - this.yPos,
+            dx: this.otherPlayer.xPos - this.xPos,
+        }
+    }
+
+
     updateNetwork(inputs) {
         this.updateBotPosition(inputs.xPos, inputs.yPos, inputs.rotation)
+        this.otherPlayer = inputs.otherPlayer;
         const translatedPositions = this.translateObjectPositions(inputs.otherPlayer)
         this.setInputNeurons(translatedPositions);
         this.drawBrainView(translatedPositions);

@@ -1,18 +1,16 @@
 
 import { distanceBetweenPoints } from './math';
 
-const ORIGINAL_TICK_TIME = 75;
-const TICK_TIME = 75;
-const TICK_RATIO = ORIGINAL_TICK_TIME / TICK_TIME;
-
-const BOT_SIZE = 25;
-const MAX_SPEED = 15 * TICK_RATIO;
-
-const BULLET_SIZE = 10;
-const BULLET_SPEED = 150;
-
-const MAP_WIDTH = 1000;
-const MAP_HEIGHT = 500;
+import {
+    TICK_TIME,
+    BOT_SIZE,
+    MAX_SPEED,
+    MOVE_SPEED_MULTIPLIER,
+    BULLET_SIZE,
+    BULLET_SPEED,
+    MAP_WIDTH,
+    MAP_HEIGHT,
+} from './constants'
 
 const BOT_RADIUS = BOT_SIZE / 2;
 const BULLET_RADIUS = BULLET_SIZE / 2;
@@ -23,6 +21,7 @@ const MAX_X_POS = MAP_WIDTH - BOT_RADIUS;
 const MAX_Y_POS = MAP_HEIGHT - BOT_RADIUS;
 
 const NO_ACTION_TIMEOUT = 5;
+const BATTLE_TIMEOUT = 100;
 
 class Battleground {
     constructor() {
@@ -32,6 +31,8 @@ class Battleground {
         this.onEnd = null;
         this.winner = null;
         this.lastActionTime = null;
+        this.lastBotMoveOrShootTime = null;
+        this.lastShootTime = [Date.now(), Date.now()];
     }
 
     addBots(bot1, bot2) {
@@ -45,6 +46,7 @@ class Battleground {
         this.startTime = Date.now();
         this.lastUpdate = Date.now();
         this.lastActionTime = Date.now();
+        this.lastBotMoveOrShootTime = Date.now();
         this.updateBots();
         this.updateBotsInterval = setInterval(this.updateBots.bind(this), TICK_TIME);
         this.updateInterval = setInterval(this.update.bind(this), 10);
@@ -90,10 +92,16 @@ class Battleground {
     updateBots() {
         this.botActions[0] = this.updateBot(this.bots[0], this.bots[1]);
         this.botActions[1] = this.updateBot(this.bots[1], this.bots[0]);
-        if (this.botDidActions(this.botActions[0]) || this.botDidActions(this.botActions[1])) {
+        if (this.botDidActions(this.botActions[0])) {
             this.lastActionTime = Date.now()
         }
         if ((Date.now() - this.lastActionTime) / 1000 > NO_ACTION_TIMEOUT) {
+            this.end();
+        }
+        if ((Date.now() - this.lastBotMoveOrShootTime) / 1000 > NO_ACTION_TIMEOUT) {
+            this.end();
+        }
+        if ((Date.now() - this.startTime) / 1000 > BATTLE_TIMEOUT) {
             this.end();
         }
     }
@@ -102,8 +110,14 @@ class Battleground {
         return botActions.dx != 0 || botActions.dy != 0 || botActions.dh != 0 || botActions.ds != 0;
     }
 
+    botMoved(bot, newXPos, newYPos) {
+        return bot.xPos != newXPos || bot.yPos != newYPos;
+    }
+
     update() {
         const delta = (Date.now() - this.lastUpdate) / 1000;
+        const moveSpeedMultiplier = 1000 / TICK_TIME; // Bots actually move at maxSpeed every 75ms not every 1000ms.
+
         this.lastUpdate = Date.now();
 
         for (var i = 0; i < this.bots.length; i++) {
@@ -111,12 +125,19 @@ class Battleground {
             const botActions = this.botActions[i];
             const otherBot = i == 0 ? this.bots[1] : this.bots[0];
 
-            const xMovement = Math.min(botActions.dx, MAX_SPEED) * delta;
-            const yMovement = Math.min(botActions.dy, MAX_SPEED) * delta;
-            const rotation = Math.min(botActions.dh, MAX_SPEED) * delta;
+            const xMovement = Math.max(Math.min(botActions.dx, MAX_SPEED), -MAX_SPEED) * delta * moveSpeedMultiplier;
+            const yMovement = Math.max(Math.min(botActions.dy, MAX_SPEED), -MAX_SPEED) * delta * moveSpeedMultiplier;
+            const rotation = Math.max(Math.min(botActions.dh, MAX_SPEED), -MAX_SPEED) * delta * moveSpeedMultiplier;
 
-            bot.xPos = Math.min(Math.max(bot.xPos + xMovement, MIN_X_POS), MAX_X_POS);
-            bot.yPos = Math.min(Math.max(bot.yPos + yMovement, MIN_Y_POS), MAX_Y_POS);
+            const newXPos = Math.min(Math.max(bot.xPos + xMovement, MIN_X_POS), MAX_X_POS);
+            const newYPos = Math.min(Math.max(bot.yPos + yMovement, MIN_Y_POS), MAX_Y_POS);
+
+            if (this.botMoved(bot, newXPos, newYPos) || botActions.ds) {
+                this.lastBotMoveOrShootTime = Date.now();
+            }
+
+            bot.xPos = newXPos;
+            bot.yPos = newYPos;
             bot.rotation += rotation;
             if (bot.rotation > 360)  {
                 bot.rotation -= 360;
@@ -126,8 +147,8 @@ class Battleground {
             }
 
             bot.bullets.forEach((bullet) => {
-                const xDistance = BULLET_SPEED * Math.cos(bullet.rotation * Math.PI / 180) * delta
-                const yDistance = BULLET_SPEED * Math.sin(bullet.rotation * Math.PI / 180) * delta
+                const xDistance = BULLET_SPEED * Math.cos(bullet.rotation * Math.PI / 180) * delta * moveSpeedMultiplier;
+                const yDistance = BULLET_SPEED * Math.sin(bullet.rotation * Math.PI / 180) * delta * moveSpeedMultiplier;
                 bullet.xPos += xDistance;
                 bullet.yPos += yDistance;
                 if (bullet.xPos > MAX_X_POS || bullet.xPos < 0) {
@@ -151,7 +172,8 @@ class Battleground {
             bot.bullets = bot.bullets.filter(function (bullet) { return !bullet.dead; });
             // console.log("Bot bullets: ", bot.bullets);
 
-            if (botActions.ds && bot.bullets.length < 5) {
+            if (botActions.ds && bot.bullets.length < 5 && (Date.now() - this.lastShootTime[i]) >= TICK_TIME) {
+                this.lastShootTime[i] = Date.now();
                 let bullet = this.spawnBullet(bot.xPos, bot.yPos, bot.rotation);
                 // console.log("Spawning bullet: ", bullet);
                 botActions.ds = false;

@@ -74,12 +74,11 @@ export default class Species {
             }
 
             child.mutate();
-
-
         } else {
             child = this.cloneRandomGenome();
         }
 
+        child.initializeNeurons();
         this.genomes.push(child);
     }
 

@@ -12,8 +12,8 @@ import {
     MAX_NEURONS
 } from './constants'
 
-const INITIAL_SPECIES = 3;
-const INITIAL_GENOMES_PER_SPECIES = 3;
+const INITIAL_SPECIES = 10;
+const INITIAL_GENOMES_PER_SPECIES = 5;
 const POPULATION = 100;
 
 const ROUNDS_PER_GENOME = 1;

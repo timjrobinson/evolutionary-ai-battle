@@ -22,7 +22,11 @@ function battle() {
     battleground.start((results) => {
         console.log("Battle results: ", results);
 
-        const botFitness = bot1.lives * 10 + (5 - bot2.lives) * 10 + Math.floor(results.totalTime)
+        let botFitness = Math.floor(results.totalTime)
+        if (results.winner == 1) {
+            botFitness += bot1.lives * 10;
+            botFitness += 200;
+        }
         console.log("Bot fitness is: ", botFitness);
         bot1.genome.addFitness(botFitness);
         bot1.genome.totalRounds++;
