@@ -16,13 +16,12 @@ const INITIAL_SPECIES = 10;
 const INITIAL_GENOMES_PER_SPECIES = 5;
 const POPULATION = 100;
 
-const ROUNDS_PER_GENOME = 1;
+const ROUNDS_PER_GENOME = 5;
 
 export default class Trainer {
     constructor() {
         this.maxFitness = 0;
         this.species = []
-        this.initializeSpecies();
     }
 
     initializeSpecies() {
@@ -34,6 +33,11 @@ export default class Trainer {
             }
             this.species.push(species);
         }
+    }
+
+    loadSpeciesFromJSON(data) {
+        const species = Species.loadFromJSON(data);
+        this.species.push(species);
     }
 
     createNewGenome() {

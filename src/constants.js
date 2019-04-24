@@ -9,7 +9,7 @@ export const BRAIN_HEIGHT = MAP_HEIGHT * 2;
 
 export const BRAIN_CANVAS_WIDTH = 400;
 
-export const NN_SQUARE_SIZE = 100;
+export const NN_SQUARE_SIZE = 50;
 export const BRAIN_CANVAS_SCALE = (BRAIN_CANVAS_WIDTH / (BRAIN_WIDTH / NN_SQUARE_SIZE)); 
 
 export const INPUT_WIDTH = BRAIN_WIDTH / NN_SQUARE_SIZE;

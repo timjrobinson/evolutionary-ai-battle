@@ -3,8 +3,17 @@
 import Bot from './bot'
 import Battleground from './battleground'
 import Trainer from './trainer'
+import species1 from '../species-1.json'
+import species2 from '../species-2.json'
+import species3 from '../species-3.json'
+import species4 from '../species-4.json'
 
 const trainer = new Trainer();
+trainer.initializeSpecies();
+// trainer.loadSpeciesFromJSON({genomes: species1});
+// trainer.loadSpeciesFromJSON({genomes: species2});
+// trainer.loadSpeciesFromJSON({genomes: species3});
+// trainer.loadSpeciesFromJSON({genomes: species4});
 battle();
 
 function battle() {
@@ -14,6 +23,8 @@ function battle() {
 
     // Bot 2 just does random stuff
     const bot2 = new Bot(2);
+    bot2.loadGenome(trainer.getRandomGenome());
+    bot2.selectAIMethod();
 
     // const commands = bot.update(inputs);
 
@@ -22,10 +33,10 @@ function battle() {
     battleground.start((results) => {
         console.log("Battle results: ", results);
 
-        let botFitness = Math.floor(results.totalTime)
+        let botFitness = Math.floor(results.totalTime) + ((5 - bot2.lives) * 10)
         if (results.winner == 1) {
             botFitness += bot1.lives * 10;
-            botFitness += 200;
+            botFitness += 100;
         }
         console.log("Bot fitness is: ", botFitness);
         bot1.genome.addFitness(botFitness);

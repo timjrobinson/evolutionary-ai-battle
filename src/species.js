@@ -12,6 +12,16 @@ export default class Species {
         this.averageGlobalRank = 0;
     }
 
+    static loadFromJSON(data) {
+        const species = new Species();
+        const genomes = data.genomes;
+        genomes.forEach((genomeData) => {
+            const genome = Genome.loadFromJSON(genomeData);
+            species.genomes.push(genome);
+        })
+        return species;
+    }
+
     // Go through all genomes and remove the unfittest 50%
     cull() {
         this.genomes.sort((a, b) => {

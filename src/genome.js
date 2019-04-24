@@ -83,6 +83,25 @@ export default class Genome {
         this.maxNeuron = genome.maxNeuron;
     }
 
+    static loadFromJSON(data) {
+        const genome = new Genome();
+        genome.mutationRates = Object.assign({}, data.mutationRates);
+        genome.maxNeuron = data.maxNeuron;
+
+        data.genes.forEach((geneData) => {
+            const gene = new Gene();
+            gene.from = geneData.from;
+            gene.to = geneData.to;
+            gene.weight = geneData.weight;
+            gene.enabled = geneData.enabled;
+            gene.innovation = geneData.innovation;
+            genome.genes.push(gene);
+        });
+
+        genome.initializeNeurons();
+        return genome;
+    }
+
     clone() {
         const clonedGenome = new Genome();
         this.genes.forEach(function (gene) {

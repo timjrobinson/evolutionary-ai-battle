@@ -28,10 +28,11 @@ class Bot {
         this.id = id;
         this.xPos = PLAYER1_START_X;
         this.yPos = PLAYER1_START_Y;
-        this.rotation = PLAYER1_START_ROTATION;
+        this.rotation = 0;
         this.bullets = [];
         this.lives = STARTING_LIVES;
         this.genome = new Genome();
+        this.outputMethod = null;
 
         if (this.id > 1) {
             this.xPos = PLAYER2_START_X;
@@ -44,16 +45,22 @@ class Bot {
     loadGenome(genome) {
         this.genome = genome;
     }
+    
+    selectAIMethod() {
+        const randomMethod = Math.floor(Math.random() * 5); // 5th method is to use the gnome assigned like player1
+        console.log("AI Method chosen: " + randomMethod);
+
+        switch (randomMethod) {
+            case 0: return this.aiMethod = this.createRandomOutputObject.bind(this)
+            case 1: return this.aiMethod = this.createStandAndShootOutputObject.bind(this);
+            case 2: return this.aiMethod = this.createMoveVerticalAndShootOutputObject.bind(this);
+            case 3: return this.aiMethod = this.createSpinAndShootOutputObject.bind(this);
+        }
+    }
 
     createOutputObject() {
-        if (this.id == 2) {
-            const randomMethod = Math.floor(Math.random() * 4);
-            switch (randomMethod) {
-                case 0: return this.createRandomOutputObject();
-                case 1: return this.createStandAndShootOutputObject();
-                case 2: return this.createMoveVerticalAndShootOutputObject();
-                default: return this.createSpinAndShootOutputObject();
-            }
+        if (this.id == 2 && this.aiMethod) {
+            return this.aiMethod();
         }
         // There should be a total of 16 output nodes, 5 bits for each movement / rotation and another bit on if it should shoot or not
         const neurons = this.genome.neurons;
@@ -74,12 +81,17 @@ class Bot {
         dx *= (outputValues[1] * MAX_SPEED)
         let dy = outputValues[2] == 0 ? -1 : 1;
         dy *= (outputValues[3] * MAX_SPEED)
+
+        // Translate what the bot thinks it wants to do into real world space (as the bots vision is based on its direction)
+        const translatedDx = Math.cos(degreesToRadians(this.rotation)) * dx - Math.sin(degreesToRadians(this.rotation)) * dy;
+        const translatedDy = Math.sin(degreesToRadians(this.rotation)) * dx + Math.cos(degreesToRadians(this.rotation)) * dy;
+
         let dh = outputValues[4] == 0 ? -1 : 1;
         dh *= (outputValues[5] * MAX_SPEED)
 
         return {
-            dx, 
-            dy, 
+            dx: translatedDx, 
+            dy: translatedDy, 
             dh, 
             ds: outputValues[6] 
         }
@@ -146,6 +158,16 @@ class Bot {
 
         const otherPlayerRotated = rotateAroundPoint(this.xPos, this.yPos, rotationAngle, [otherPlayer.xPos, otherPlayer.yPos]);
         const otherPlayerTranslated = translateMatrix(translationMatrix, otherPlayerRotated);
+        const walls = [];
+        for (var i = NN_SQUARE_SIZE / 2; i < MAP_WIDTH; i += NN_SQUARE_SIZE) {
+            walls.push({xPos: i, yPos: -NN_SQUARE_SIZE / 2});
+            walls.push({xPos: i, yPos: MAP_HEIGHT + (NN_SQUARE_SIZE / 2)});
+        }
+        for (var i = NN_SQUARE_SIZE / 2; i < MAP_HEIGHT; i += NN_SQUARE_SIZE) {
+            walls.push({xPos: -NN_SQUARE_SIZE / 2, yPos: i});
+            walls.push({xPos: MAP_WIDTH + (NN_SQUARE_SIZE / 2), yPos: i});
+        }
+         
 
         return {
             xPos: otherPlayerTranslated[0],
@@ -156,6 +178,14 @@ class Bot {
                 return {
                     xPos: bulletTranslated[0],
                     yPos: bulletTranslated[1]
+                }
+            }),
+            walls: walls.map((wall) => {
+                const wallRotated = rotateAroundPoint(playerXPos, playerYPos, rotationAngle, [wall.xPos, wall.yPos]);
+                const wallTranslated = translateMatrix(translationMatrix, wallRotated);
+                return {
+                    xPos: wallTranslated[0],
+                    yPos: wallTranslated[1]
                 }
             })
         }
@@ -178,6 +208,12 @@ class Bot {
             translatedPositions.bullets.forEach((bullet) => {
                 if (bullet.xPos > currentSquare.minX && bullet.xPos < currentSquare.maxX
                     && bullet.yPos > currentSquare.minY && bullet.yPos < currentSquare.maxY) {
+                    neurons[i].value = -1;
+                }
+            });
+            translatedPositions.walls.forEach((wall) => {
+                if (wall.xPos > currentSquare.minX && wall.xPos < currentSquare.maxX
+                    && wall.yPos > currentSquare.minY && wall.yPos < currentSquare.maxY) {
                     neurons[i].value = -1;
                 }
             });
@@ -219,6 +255,13 @@ class Bot {
                 const bulletYPos = this.scaleForBrain(bullet.yPos);
                 ctx.fillRect(bulletXPos, bulletYPos, BRAIN_CANVAS_SCALE, BRAIN_CANVAS_SCALE);
             });
+
+            translatedPositions.walls.forEach((wall) => {
+                const wallXPos = this.scaleForBrain(wall.xPos);
+                const wallYPos = this.scaleForBrain(wall.yPos);
+                ctx.fillRect(wallXPos, wallYPos, BRAIN_CANVAS_SCALE, BRAIN_CANVAS_SCALE);
+            });
+
 
         }
     }
