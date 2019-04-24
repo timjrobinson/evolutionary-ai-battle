@@ -132,7 +132,7 @@ class Battleground {
             const newXPos = Math.min(Math.max(bot.xPos + xMovement, MIN_X_POS), MAX_X_POS);
             const newYPos = Math.min(Math.max(bot.yPos + yMovement, MIN_Y_POS), MAX_Y_POS);
 
-            if (this.botMoved(bot, newXPos, newYPos) || botActions.ds) {
+            if (bot.id === 1 && (this.botMoved(bot, newXPos, newYPos) || botActions.ds)) {
                 this.lastBotMoveOrShootTime = Date.now();
             }
 

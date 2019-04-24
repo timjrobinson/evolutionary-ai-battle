@@ -23,12 +23,12 @@ export default class Species {
     }
 
     // Go through all genomes and remove the unfittest 50%
-    cull() {
+    cull(allButOne) {
         this.genomes.sort((a, b) => {
             return b.fitness - a.fitness;
         });
 
-        const remainingGenomes = Math.ceil(this.genomes.length / 2);
+        const remainingGenomes = allButOne ? 1 : Math.ceil(this.genomes.length / 2);
         console.log("Genomes before the cull: ", this.genomes);
 
         this.genomes = this.genomes.slice(0, remainingGenomes)
@@ -45,7 +45,7 @@ export default class Species {
             maxFitness = Math.max(maxFitness, genome.fitness);
         });
 
-        if (maxFitness <= this.maxFitness && maxFitness <= overallMaxFitness) {
+        if (maxFitness <= this.maxFitness && maxFitness <= (overallMaxFitness * 0.9)) {
             this.staleness++;
         } 
 
@@ -63,10 +63,13 @@ export default class Species {
     }
 
     createChildren() {
+        const children = [];
         const totalChildren = Math.floor(this.breed);
         for (var i = 0; i < totalChildren; i++) {
-            this.createChild();
+            let newChild = this.createChild();
+            children.push(newChild);
         }
+        return children;
     }
 
     createChild() {
@@ -89,7 +92,13 @@ export default class Species {
         }
 
         child.initializeNeurons();
-        this.genomes.push(child);
+        return child;
+    }
+
+    resetFitness() {
+        this.genomes.forEach((genome) => {
+            genome.fitness = 0;
+        });
     }
 
     getRandomGenome() {

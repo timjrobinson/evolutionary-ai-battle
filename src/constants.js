@@ -37,3 +37,6 @@ export const PLAYER2_START_X = 964;
 export const PLAYER2_START_Y = 350;
 export const PLAYER2_START_ROTATION = 180;
 
+export const DELTA_DISJOINT = 2;
+export const DELTA_WEIGHTS = 0.4;
+export const DELTA_THRESHOLD = 1;

@@ -9,19 +9,22 @@ import Genome from './genome';
 import {
     INPUT_NEURONS,
     OUTPUT_NEURONS,
-    MAX_NEURONS
+    MAX_NEURONS,
+    DELTA_DISJOINT,
+    DELTA_WEIGHTS,
+    DELTA_THRESHOLD
 } from './constants'
 
-const INITIAL_SPECIES = 10;
-const INITIAL_GENOMES_PER_SPECIES = 5;
+const INITIAL_SPECIES = 3;
+const INITIAL_GENOMES_PER_SPECIES = 3;
 const POPULATION = 100;
-
-const ROUNDS_PER_GENOME = 5;
 
 export default class Trainer {
     constructor() {
         this.maxFitness = 0;
-        this.species = []
+        this.totalGenerations = 1;
+        this.species = [];
+        this.children = [];
     }
 
     initializeSpecies() {
@@ -48,11 +51,13 @@ export default class Trainer {
     }
 
     /* Returns a random genome that hasn't had enough battles yet. 
-    Genomes each do ROUNDS_PER_GENOME battles to determine their fitness
+    Genomes each do n battles to determine their fitness where n
+    is the generation that we're on now (so as genomes get better they fight longer)
     */
     getRandomGenome() {
         let genome = null;
-        while (genome == null || genome.totalRounds >= ROUNDS_PER_GENOME) {
+        const roundsPerGenome = this.totalGenerations;
+        while (genome == null || genome.totalRounds >= roundsPerGenome) {
             genome = this.getRandomSpecies().getRandomGenome();
         }
         console.log("New Genome genes: ", genome.genes);
@@ -64,9 +69,9 @@ export default class Trainer {
     }
 
     /* Go through each species, eliminate all below average genomes in the species */
-    cullSpecies() {
+    cullSpecies(allButOne) {
         this.species.forEach((species) => {
-            species.cull();
+            species.cull(allButOne);
         });
     }
 
@@ -118,7 +123,7 @@ export default class Trainer {
         console.log("Removing weak species. TAGR: ", totalAverageGlobalRank, " species: ", this.species);
 
         this.species = this.species.map(function(species) {
-            species.breed = Math.floor((species.averageGlobalRank / totalAverageGlobalRank) * POPULATION);
+            species.breed = Math.floor((species.averageGlobalRank / totalAverageGlobalRank) * POPULATION) - 1;
             return species;
         }).filter(function (species) {
             return species.breed >= 1;
@@ -126,9 +131,86 @@ export default class Trainer {
     }
 
     createChildren() {
-        this.species.forEach(function (species) {
-            species.createChildren();
+        this.children = [];
+        this.species.forEach((species) => {
+            const newChildren = species.createChildren();
+            this.children = this.children.concat(newChildren);
         });
+    }
+
+    resetFitness() {
+        this.species.forEach(function(species) {
+            species.resetFitness();
+        });
+    }
+
+    assignChildrenToSpecies() {
+        this.children.forEach((child) => {
+            const sameSpecies = this.species.find((species) => {
+                return this.isSameSpecies(child, species.genomes[0]);
+            });
+            if (sameSpecies) {
+                return sameSpecies.genomes.push(child);
+            }
+
+            console.log("Creating new species!")
+            const newSpecies = new Species();
+            newSpecies.genomes.push(child);
+            this.species.push(newSpecies);
+        });
+        this.children = [];
+    }
+
+    isSameSpecies(genome1, genome2) {
+        const dd = DELTA_DISJOINT * this.disjoint(genome1.genes, genome2.genes);
+        const dw = DELTA_WEIGHTS * this.weights(genome1.genes, genome2.genes);
+        return dd + dw < DELTA_THRESHOLD
+    }
+
+    // Calculate the fraction of the number of genes that these two genepools don't have in common
+    disjoint(genes1, genes2) {
+        const gene1innovations = {};
+        const gene2innovations = {};
+        genes1.forEach((gene) => {
+            gene1innovations[gene.innovation] = true;
+        });
+        genes2.forEach((gene) => {
+            gene2innovations[gene.innovation] = true;
+        });
+
+        let disjointedGenes = 0;
+        genes1.forEach((gene) => {
+            if (!gene2innovations[gene.innovation]) {
+                disjointedGenes++;
+            }
+        });
+        genes2.forEach((gene) => {
+            if (!gene1innovations[gene.innovation]) {
+                disjointedGenes++;
+            }
+        });
+
+        const maxTotalGenes = Math.max(genes1.length, genes2.length);
+        return disjointedGenes / maxTotalGenes;
+    }
+
+    weights(genes1, genes2) {
+        const gene2innovations = {};
+        genes2.forEach((gene) => {
+            gene2innovations[gene.innovation] = gene;
+        });
+
+        let sum = 0;
+        let coincident = 0;
+        genes1.forEach((gene) => {
+            if (gene2innovations[gene.innovation] != null) {
+                const gene2 = gene2innovations[gene.innovation];
+                sum = sum + Math.abs(gene.weight - gene2.weight);
+                coincident++;
+            }
+        });
+
+        return sum / coincident;
     }
 
 
@@ -141,14 +223,19 @@ export default class Trainer {
         this.calculateSpeciesAverageGlobalRank();
         this.removeWeakSpecies();
         this.createChildren();
-        console.log("New generation is: ", this.species);
+        this.cullSpecies(true);
+        this.resetFitness();
+        this.assignChildrenToSpecies();
+        this.totalGenerations++;
+        console.log("On generation " + this.totalGenerations + " species is: ", this.species);
     }
 
     getTotalRoundsRemaining() {
         let totalRoundsRemaining = 0;
+        const roundsPerGenome = this.totalGenerations;
         this.species.forEach(function(species) {
             species.genomes.forEach(function(genome) {
-                totalRoundsRemaining += ROUNDS_PER_GENOME - genome.totalRounds;
+                totalRoundsRemaining += roundsPerGenome - genome.totalRounds;
             })
         });
         return totalRoundsRemaining;

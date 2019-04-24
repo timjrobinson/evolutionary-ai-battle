@@ -77,17 +77,14 @@ class Bot {
         // let dh = outputValues[10] == 0 ? -1 : 1;
         // dh *=  (outputValues[11] * 1 + outputValues[12] * 2 + outputValues[13] * 4 + outputValues[14] * 8);
 
-        let dx = outputValues[0] == 0 ? -1 : 1;
-        dx *= (outputValues[1] * MAX_SPEED)
-        let dy = outputValues[2] == 0 ? -1 : 1;
-        dy *= (outputValues[3] * MAX_SPEED)
+        let dx = outputValues[0] * -MAX_SPEED + outputValues[1] * MAX_SPEED;
+        let dy = outputValues[2] * -MAX_SPEED + outputValues[3] * MAX_SPEED;
 
         // Translate what the bot thinks it wants to do into real world space (as the bots vision is based on its direction)
         const translatedDx = Math.cos(degreesToRadians(this.rotation)) * dx - Math.sin(degreesToRadians(this.rotation)) * dy;
         const translatedDy = Math.sin(degreesToRadians(this.rotation)) * dx + Math.cos(degreesToRadians(this.rotation)) * dy;
 
-        let dh = outputValues[4] == 0 ? -1 : 1;
-        dh *= (outputValues[5] * MAX_SPEED)
+        let dh = outputValues[4] * -MAX_SPEED + outputValues[5] * MAX_SPEED
 
         return {
             dx: translatedDx, 
