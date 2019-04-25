@@ -50,19 +50,27 @@ export default class Trainer {
         return genome;
     }
 
+    getRandomGenome()  {
+        return this.getRandomSpecies().getRandomGenome();
+    }
+
+    getRoundsPerGenome() {
+        return Math.min(this.totalGenerations, 5);
+    }
     /* Returns a random genome that hasn't had enough battles yet. 
     Genomes each do n battles to determine their fitness where n
     is the generation that we're on now (so as genomes get better they fight longer)
     */
-    getRandomGenome() {
+    getRandomAvailableGenome(callback) {
         let genome = null;
-        const roundsPerGenome = this.totalGenerations;
-        while (genome == null || genome.totalRounds >= roundsPerGenome) {
-            genome = this.getRandomSpecies().getRandomGenome();
+        const roundsPerGenome = this.getRoundsPerGenome();
+        genome = this.getRandomSpecies().getRandomGenome();
+        if (genome == null || genome.totalRounds >= roundsPerGenome) {
+            return setTimeout(this.getRandomAvailableGenome.bind(this, callback));
         }
-        console.log("New Genome genes: ", genome.genes);
-        return genome;
+        return callback(genome);
     }
+
 
     getRandomSpecies() {
         return this.species[Math.floor(Math.random() * this.species.length)];
@@ -120,7 +128,7 @@ export default class Trainer {
             totalAverageGlobalRank += species.averageGlobalRank;
         });
 
-        console.log("Removing weak species. TAGR: ", totalAverageGlobalRank, " species: ", this.species);
+        // console.log("Removing weak species. TAGR: ", totalAverageGlobalRank, " species: ", this.species);
 
         this.species = this.species.map(function(species) {
             species.breed = Math.floor((species.averageGlobalRank / totalAverageGlobalRank) * POPULATION) - 1;
@@ -153,7 +161,6 @@ export default class Trainer {
                 return sameSpecies.genomes.push(child);
             }
 
-            console.log("Creating new species!")
             const newSpecies = new Species();
             newSpecies.genomes.push(child);
             this.species.push(newSpecies);
@@ -227,12 +234,12 @@ export default class Trainer {
         this.resetFitness();
         this.assignChildrenToSpecies();
         this.totalGenerations++;
-        console.log("On generation " + this.totalGenerations + " species is: ", this.species);
+        // console.log("On generation " + this.totalGenerations + " species is: ", this.species);
     }
 
     getTotalRoundsRemaining() {
         let totalRoundsRemaining = 0;
-        const roundsPerGenome = this.totalGenerations;
+        const roundsPerGenome = this.getRoundsPerGenome();
         this.species.forEach(function(species) {
             species.genomes.forEach(function(genome) {
                 totalRoundsRemaining += roundsPerGenome - genome.totalRounds;

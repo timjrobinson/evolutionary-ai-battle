@@ -67,7 +67,13 @@ class Battleground {
             startTime: this.startTime,
             endTime: this.endTime,
             totalTime,
-            winner: this.winner
+            winner: this.winner,
+            bot1: {
+                lives: this.bots[0].lives
+            },
+            bot2: {
+                lives: this.bots[1].lives
+            }
         };
         this.onEnd(results);
         this.onEnd = null;
@@ -184,6 +190,8 @@ class Battleground {
     }
 
     draw() {
+        if (typeof document === "undefined") return;
+
         var canvas = document.getElementById('battleground');
         if (canvas.getContext) {
             var ctx = canvas.getContext('2d');

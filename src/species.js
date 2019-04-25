@@ -22,6 +22,17 @@ export default class Species {
         return species;
     }
 
+    serialize() {
+        const genomes = this.genomes.map((genome) => {
+            return genome.serialize();
+        })
+        return {
+            genomes: genomes,
+            staleness: this.staleness,
+            maxFitness: this.maxFitness
+        }
+    }
+
     // Go through all genomes and remove the unfittest 50%
     cull(allButOne) {
         this.genomes.sort((a, b) => {
@@ -29,10 +40,10 @@ export default class Species {
         });
 
         const remainingGenomes = allButOne ? 1 : Math.ceil(this.genomes.length / 2);
-        console.log("Genomes before the cull: ", this.genomes);
+        // console.log("Genomes before the cull: ", this.genomes);
 
         this.genomes = this.genomes.slice(0, remainingGenomes)
-        console.log("Genomes after the cull: ", this.genomes);
+        // console.log("Genomes after the cull: ", this.genomes);
     }
 
     // Go through genomes and check if any have surpassed the 

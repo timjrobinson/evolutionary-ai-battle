@@ -225,6 +225,8 @@ class Bot {
     }
 
     drawBrainView(translatedPositions) {
+        if (typeof document === "undefined") return;
+
         var canvas = document.getElementById('bot' + this.id + 'brain');
         if (canvas.getContext) {
             var ctx = canvas.getContext('2d');

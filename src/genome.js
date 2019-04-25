@@ -43,6 +43,16 @@ class Gene {
         gene.innovation = this.innovation;
         return gene;
     }
+
+    serialize() {
+        return {
+            from: this.from,
+            to: this.to,
+            weight: this.weight,
+            enabled: this.enabled,
+            innovation: this.innovation
+        };
+    }
 }
 
 class Neuron {
@@ -101,6 +111,17 @@ export default class Genome {
 
         genome.initializeNeurons();
         return genome;
+    }
+
+    serialize() {
+        const genes = this.genes.map((gene) => {
+            return gene.serialize();
+        });
+        return {
+            genes: genes,
+            mutationRates: Object.assign({}, this.mutationRates),
+            maxNeuron: this.maxNeuron
+        }
     }
 
     clone() {
