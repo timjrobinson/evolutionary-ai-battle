@@ -3,7 +3,7 @@
 import Bot from './bot'
 import Battleground from './battleground'
 import Trainer from './trainer'
-import species1 from '../species-new-1.json'
+import species1 from '../d9c615f0-generation-110-species.json'
 import species2 from '../species-2.json'
 import species3 from '../species-3.json'
 import species4 from '../species-4.json'
@@ -15,7 +15,7 @@ const trainer = new Trainer();
 // trainer.loadSpeciesFromJSON({genomes: species3});
 // trainer.loadSpeciesFromJSON({genomes: species4});
 species1.forEach(function(species) {
-    trainer.loadSpeciesFromJSON({genomes: species});
+    trainer.loadSpeciesFromJSON(species);
 });
 battle();
 

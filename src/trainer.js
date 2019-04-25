@@ -51,7 +51,9 @@ export default class Trainer {
     }
 
     getRandomGenome()  {
-        return this.getRandomSpecies().getRandomGenome();
+        const genome = this.getRandomSpecies().getRandomGenome();
+        console.log("Genome is: ", genome);
+        return genome;
     }
 
     getRoundsPerGenome() {

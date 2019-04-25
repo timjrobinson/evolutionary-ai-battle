@@ -46,7 +46,12 @@ class Bot {
         this.genome = genome;
     }
     
-    selectAIMethod() {
+    selectAIMethod(totalGenerations) {
+        const chanceToChooseRealGenome = totalGenerations / 100;
+        if (Math.random() < chanceToChooseRealGenome) {
+            console.log("Using real Genome for AI");
+            return; // Will use real genome
+        }
         const randomMethod = Math.floor(Math.random() * 5); // 5th method is to use the gnome assigned like player1
         console.log("AI Method chosen: " + randomMethod);
 

@@ -120,7 +120,8 @@ export default class Genome {
         return {
             genes: genes,
             mutationRates: Object.assign({}, this.mutationRates),
-            maxNeuron: this.maxNeuron
+            maxNeuron: this.maxNeuron,
+            fitness: this.fitness
         }
     }
 
