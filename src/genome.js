@@ -89,6 +89,7 @@ export default class Genome {
         genome.maxNeuron = data.maxNeuron;
 
         data.genes.forEach((geneData) => {
+            Innovation.setHighestInnovation(geneData.innovation);
             const gene = new Gene();
             gene.from = geneData.from;
             gene.to = geneData.to;

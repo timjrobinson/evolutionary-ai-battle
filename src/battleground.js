@@ -21,7 +21,8 @@ const MAX_X_POS = MAP_WIDTH - BOT_RADIUS;
 const MAX_Y_POS = MAP_HEIGHT - BOT_RADIUS;
 
 const NO_ACTION_TIMEOUT = 5;
-const BATTLE_TIMEOUT = 100;
+const NO_MOVE_TIMEOUT = 15;
+const BATTLE_TIMEOUT = 60;
 
 class Battleground {
     constructor() {
@@ -31,7 +32,7 @@ class Battleground {
         this.onEnd = null;
         this.winner = null;
         this.lastActionTime = null;
-        this.lastBotMoveOrShootTime = null;
+        this.lastBotMoveTime = null;
         this.lastShootTime = [Date.now(), Date.now()];
     }
 
@@ -46,7 +47,7 @@ class Battleground {
         this.startTime = Date.now();
         this.lastUpdate = Date.now();
         this.lastActionTime = Date.now();
-        this.lastBotMoveOrShootTime = Date.now();
+        this.lastBotMoveTime = Date.now();
         this.updateBots();
         this.updateBotsInterval = setInterval(this.updateBots.bind(this), TICK_TIME);
         this.updateInterval = setInterval(this.update.bind(this), 10);
@@ -98,7 +99,7 @@ class Battleground {
         if ((Date.now() - this.lastActionTime) / 1000 > NO_ACTION_TIMEOUT) {
             this.end();
         }
-        if ((Date.now() - this.lastBotMoveOrShootTime) / 1000 > NO_ACTION_TIMEOUT) {
+        if ((Date.now() - this.lastBotMoveTime) / 1000 > NO_MOVE_TIMEOUT) {
             this.end();
         }
         if ((Date.now() - this.startTime) / 1000 > BATTLE_TIMEOUT) {
@@ -132,8 +133,8 @@ class Battleground {
             const newXPos = Math.min(Math.max(bot.xPos + xMovement, MIN_X_POS), MAX_X_POS);
             const newYPos = Math.min(Math.max(bot.yPos + yMovement, MIN_Y_POS), MAX_Y_POS);
 
-            if (bot.id === 1 && (this.botMoved(bot, newXPos, newYPos) || botActions.ds)) {
-                this.lastBotMoveOrShootTime = Date.now();
+            if (bot.id === 1 && this.botMoved(bot, newXPos, newYPos)) {
+                this.lastBotMoveTime = Date.now();
             }
 
             bot.xPos = newXPos;

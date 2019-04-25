@@ -3,17 +3,20 @@
 import Bot from './bot'
 import Battleground from './battleground'
 import Trainer from './trainer'
-import species1 from '../species-1.json'
+import species1 from '../species-new-1.json'
 import species2 from '../species-2.json'
 import species3 from '../species-3.json'
 import species4 from '../species-4.json'
 
 const trainer = new Trainer();
-trainer.initializeSpecies();
+// trainer.initializeSpecies();
 // trainer.loadSpeciesFromJSON({genomes: species1});
 // trainer.loadSpeciesFromJSON({genomes: species2});
 // trainer.loadSpeciesFromJSON({genomes: species3});
 // trainer.loadSpeciesFromJSON({genomes: species4});
+species1.forEach(function(species) {
+    trainer.loadSpeciesFromJSON({genomes: species});
+});
 battle();
 
 function battle() {
@@ -33,10 +36,10 @@ function battle() {
     battleground.start((results) => {
         console.log("Battle results: ", results);
 
-        let botFitness = Math.floor(results.totalTime) + ((5 - bot2.lives) * 10)
+        let botFitness = Math.min(60, Math.floor(results.totalTime)) + ((5 - bot2.lives) * 20)
         if (results.winner == 1) {
             botFitness += bot1.lives * 10;
-            botFitness += 100;
+            botFitness += 150;
         }
         console.log("Bot fitness is: ", botFitness);
         bot1.genome.addFitness(botFitness);
