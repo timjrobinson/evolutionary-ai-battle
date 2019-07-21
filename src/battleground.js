@@ -1,4 +1,9 @@
-
+/**
+ * The battleground class controls the updating and drawing of an invidual battle between bots. 
+ * 
+ * It runs an update loop that ticks every config.tickTime milliseconds, and runs a draw loop that runs
+ * as fast as your computer can handle. 
+ */
 import { distanceBetweenPoints } from './math';
 
 import {
