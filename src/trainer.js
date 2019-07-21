@@ -5,6 +5,7 @@
  */
 import Species from './species'
 import Genome from './genome';
+const config = require("config");
 
 import {
     INPUT_NEURONS,
@@ -15,9 +16,9 @@ import {
     DELTA_THRESHOLD
 } from './constants'
 
-const INITIAL_SPECIES = 3;
-const INITIAL_GENOMES_PER_SPECIES = 3;
-const POPULATION = 100;
+const INITIAL_SPECIES = config.get("initialSpecies");
+const INITIAL_GENOMES_PER_SPECIES = config.get("initialGenomesPerSpecies");
+const POPULATION = config.get("population");
 
 export default class Trainer {
     constructor() {
@@ -27,7 +28,7 @@ export default class Trainer {
         this.children = [];
     }
 
-    initializeSpecies() {
+    createInitialSpecies() {
         for (var i = 0; i < INITIAL_SPECIES; i++) {
             let species = new Species()
             for (var j = 0; j < INITIAL_GENOMES_PER_SPECIES; j++) {
@@ -39,6 +40,13 @@ export default class Trainer {
     }
 
     loadSpeciesFromJSON(data) {
+        if (Array.isArray(data)) {
+            data.forEach((speciesData) => {
+                const species = Species.loadFromJSON(speciesData);
+                this.species.push(species);
+            });
+            return;
+        }
         const species = Species.loadFromJSON(data);
         this.species.push(species);
     }

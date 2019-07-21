@@ -1,0 +1,36 @@
+{
+  "maxWorkers": 10,
+
+  "initialSpecies": 3,
+  "initialGenomesPerSpecies": 3,
+  "population": 100,
+
+  "mapWidth": 1000,
+  "mapHeight" : 500,
+  "botStartPoses": [
+    {
+      "xPos": 36, 
+      "yPos": 260,
+      "rotation": 0
+    },
+    {
+      "xPos": 964,
+      "yPos": 260,
+      "rotation": 180
+    }
+  ],
+  "startingLives": 5,
+  "tickTime": 75,
+  "maxRoundTime": 60,
+  "botSize": 36,
+  "maxSpeed": 15,
+  "bulletSize": 20,
+  "bulletSpeed": 20,
+
+  "neuralNetworkSquareSize": 50,
+  "maxNeurons": 10e4,
+  
+  "deltaDisjoint": 2,
+  "deltaWeights": 0.4,
+  "deltaThreshold": 1
+}
