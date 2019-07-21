@@ -56,6 +56,24 @@ export default class Trainer {
         return genome;
     }
 
+    getTopGenome() {
+        const allGenomes = [];
+        this.species.forEach((species) => {
+            species.genomes.forEach((genome) => {
+                allGenomes.push(genome);
+            });
+        });
+
+        allGenomes.sort((a, b) => {
+            return b.fitness - a.fitness;
+        });
+
+        const randomChoice = Math.floor(Math.random() * 5);
+        const genome = allGenomes[randomChoice]
+        console.log("Returning top genome: ", genome)
+        return genome;
+    }
+
     getRoundsPerGenome() {
         return Math.min(this.totalGenerations, 5);
     }

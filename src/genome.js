@@ -97,6 +97,7 @@ export default class Genome {
         const genome = new Genome();
         genome.mutationRates = Object.assign({}, data.mutationRates);
         genome.maxNeuron = data.maxNeuron;
+        genome.fitness = data.fitness;
 
         data.genes.forEach((geneData) => {
             Innovation.setHighestInnovation(geneData.innovation);

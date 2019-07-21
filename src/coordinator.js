@@ -8,7 +8,7 @@ import Battleground from './battleground'
 import Trainer from './trainer'
 import Genome from './genome'
 
-import species1 from '../51746690-generation-108-species.json'
+// import species1 from '../51746690-generation-108-species.json'
 
 if (cluster.isMaster) {
     trainerProcess();
@@ -23,10 +23,11 @@ function trainerProcess() {
     const workers = [];
 
     const trainer = new Trainer();
-    species1.forEach(function(species) {
-        trainer.loadSpeciesFromJSON(species);
-    });
-    trainer.totalGenerations = 108;
+    trainer.initializeSpecies();
+    // species1.forEach(function(species) {
+    //     trainer.loadSpeciesFromJSON(species);
+    // });
+    // trainer.totalGenerations = 108;
 
     startBattle(runId, trainer);
 }

@@ -30,11 +30,11 @@ export const BULLET_SIZE = 20;
 export const BULLET_SPEED = 20;
 
 export const PLAYER1_START_X = 36;
-export const PLAYER1_START_Y = 350;
+export const PLAYER1_START_Y = 260;
 export const PLAYER1_START_ROTATION = 0;
 
 export const PLAYER2_START_X = 964;
-export const PLAYER2_START_Y = 350;
+export const PLAYER2_START_Y = 260;
 export const PLAYER2_START_ROTATION = 180;
 
 export const DELTA_DISJOINT = 2;

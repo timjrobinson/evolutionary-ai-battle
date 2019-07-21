@@ -3,7 +3,7 @@
 import Bot from './bot'
 import Battleground from './battleground'
 import Trainer from './trainer'
-import species1 from '../d9c615f0-generation-110-species.json'
+import species1 from '../a6771530-generation-1179-species.json'
 import species2 from '../species-2.json'
 import species3 from '../species-3.json'
 import species4 from '../species-4.json'
@@ -17,17 +17,19 @@ const trainer = new Trainer();
 species1.forEach(function(species) {
     trainer.loadSpeciesFromJSON(species);
 });
+const topGenome = trainer.getTopGenome();
+console.log(JSON.stringify(topGenome.serialize()));
 battle();
 
 function battle() {
     // Bot 1 is the one we're training
     const bot1 = new Bot(1);
-    bot1.loadGenome(trainer.getRandomGenome());
+    bot1.loadGenome(trainer.getTopGenome());
 
     // Bot 2 just does random stuff
     const bot2 = new Bot(2);
-    bot2.loadGenome(trainer.getRandomGenome());
-    bot2.selectAIMethod();
+    bot2.loadGenome(trainer.getTopGenome());
+    // bot2.selectAIMethod();
 
     // const commands = bot.update(inputs);
 
@@ -42,8 +44,8 @@ function battle() {
             botFitness += 150;
         }
         console.log("Bot fitness is: ", botFitness);
-        bot1.genome.addFitness(botFitness);
-        bot1.genome.totalRounds++;
+        // bot1.genome.addFitness(botFitness);
+        // bot1.genome.totalRounds++;
 
         const roundsRemaining = trainer.getTotalRoundsRemaining() 
         console.log("Round Complete, " + roundsRemaining + " rounds remaining");
