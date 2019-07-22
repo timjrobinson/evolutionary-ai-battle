@@ -1,4 +1,10 @@
-
+/**
+ * The genome is the main neural network for the bots. It has many neurons and genes (links between
+ * neurons). 
+ * 
+ * When the genome is saved to disk only the genes are saved, the neurons are ephemeral as they can be
+ * easily created based on the gene information.  
+ */
 import {
     INPUT_NEURONS,
     OUTPUT_NEURONS,
@@ -10,6 +16,7 @@ import {
 } from './math'
 
 import Innovation from './innovation'
+const debug = require("debug")("eai:genome");
 
 const INITIAL_MUTATION_RATE = 1;
 
@@ -25,12 +32,20 @@ const MUTATE_DISABLE_CHANCE = 0.4;
 const MUTATE_ENABLE_CHANCE = 0.2;
 const STEP_SIZE = 0.1;
 
+/**
+ * A Gene is a link between two neurons. 
+ */
 class Gene {
     constructor() {
+        /** The ID of the input neuron to this gene */
         this.from = null;
+        /** The ID of the neuron this gene outputs to */
         this.to = null;
+        /** The weight of this gene (multiplyer of the value passed in) */
         this.weight = 0;
+        /** Whether this gene is enabled or not */
         this.enabled = true;
+        /** The innovation number for this gene, see README for more details */
         this.innovation = 0;
     }
 
@@ -55,10 +70,15 @@ class Gene {
     }
 }
 
+/**
+ * A Neuron is a node in the brain. 
+ */
 class Neuron {
     constructor(id) {
         this.id = id;
+        /** An array of all genes inputting to this neuron */
         this.incoming = [];
+        /** The current value of the Neuron */
         this.value = 0;
     }
 }
@@ -82,6 +102,9 @@ export default class Genome {
         this.totalRounds = 0;
     }
 
+    /** 
+     * Load from an existing Genome object. 
+     */
     load(genome) {
         this.genes = [];
         this.mutationRates = genome.getMutationRates()
@@ -93,12 +116,18 @@ export default class Genome {
         this.maxNeuron = genome.maxNeuron;
     }
 
+    /**
+     * Creates a new Genome from a JS object (parsed from JSON)
+     *  
+     * @param {Object} data 
+     */
     static loadFromJSON(data) {
         const genome = new Genome();
         genome.mutationRates = Object.assign({}, data.mutationRates);
         genome.maxNeuron = data.maxNeuron;
         genome.fitness = data.fitness;
 
+        /** Load all the genes into the genome first */
         data.genes.forEach((geneData) => {
             Innovation.setHighestInnovation(geneData.innovation);
             const gene = new Gene();
@@ -110,10 +139,14 @@ export default class Genome {
             genome.genes.push(gene);
         });
 
+        /** Create the neurons based on the genes */
         genome.initializeNeurons();
         return genome;
     }
 
+    /**
+     * Returns an object representing this Genome  
+     */
     serialize() {
         const genes = this.genes.map((gene) => {
             return gene.serialize();
@@ -126,6 +159,9 @@ export default class Genome {
         }
     }
 
+    /** 
+     * Create a new Genome that is an exact copy of this one
+     */
     clone() {
         const clonedGenome = new Genome();
         this.genes.forEach(function (gene) {
@@ -149,6 +185,9 @@ export default class Genome {
         return 0;
     }
 
+    /**
+     * Create all the neurons in this Genome based on the genes.
+     */
     initializeNeurons() {
         this.neurons = [];
 
@@ -180,8 +219,11 @@ export default class Genome {
         return neuron;
     }
 
-    /* Child gets most of its genes from parent1 which is the fittest 
-    of the two parents */
+    /**
+     * Take the genomes of two parents and return a child Genome. The child will have most of the genes
+     * from the fittest parent, however any genes that have the same innovation number will be chosen
+     * randomly from either parent. See the Innovation section of the README for more information. 
+     */
     inheritFromParents(parent1, parent2) {
         const parent2Innovations = {};
         for (let i = 0; i < parent2.genes.length; i++) {
@@ -204,8 +246,11 @@ export default class Genome {
         this.mutationRates = parent1.getMutationRates();
     }
 
-    /* Chance of applying a random mutation to the child based on
-    its mutation rate */
+    /** 
+     * Each Genome has its own mutation rates to add variety to evolution. This function performs 
+     * random mutations based on those different rates. Multiple mutations even of the same type
+     * can occur at once. This changes the Genome in place.
+     */
     mutate() {
         Object.keys(this.mutationRates).forEach((mutationType) => {
             const currentRate = this.mutationRates[mutationType];
@@ -253,6 +298,10 @@ export default class Genome {
         }
     }
 
+    /**
+     * Pick a random Neuron from the Genome.  
+     * @param {boolean} nonInput if true allow selecting one of the input neurons
+     */
     getRandomNeuron(nonInput) {
         let startingId = nonInput ? INPUT_NEURONS : 0
         const pickableNeurons = this.neurons.map((neuron) => {
@@ -263,10 +312,19 @@ export default class Genome {
         return this.neurons[neuronId];
     }
 
+    /** 
+     * Pick a random gene from the Genome
+     * @returns Gene
+     */
     getRandomGene() {
         return this.genes[Math.floor(Math.random() * this.genes.length)];
     }
 
+    /**
+     * Checks if this Genome has the specified gene 
+     * @param {Gene} gene 
+     * @returns boolean - true if this Genome has the Gene
+     */
     hasSameGene(gene) {
         const hasGene = this.genes.some(function(g) {
             if (g.from === gene.from && g.to === gene.to) {
@@ -277,6 +335,9 @@ export default class Genome {
         return hasGene;
     }
 
+    /**
+     * Mutate the weights of all genes in the Genome.
+     */
     pointMutate() {
         const step = this.mutationRates.step;
 
@@ -290,10 +351,15 @@ export default class Genome {
         });
     }
 
+    /**
+     * Takes two random neurons and creates a new Gene linking them. The gene always goes from
+     * the lower ID neuron to the higher ID one, as information should only flow forwards through
+     * the neural network. 
+     */
     linkMutate() {
-        // console.log("Performing link mutation");
-        let neuron1 = this.getRandomNeuron(false)
-        let neuron2 = this.getRandomNeuron(true)
+        debug("Performing link mutation");
+        let neuron1 = this.getRandomNeuron(false);
+        let neuron2 = this.getRandomNeuron(true);
 
         const gene = new Gene()
         if (neuron1.id < INPUT_NEURONS && neuron2.id < INPUT_NEURONS) {
@@ -317,15 +383,17 @@ export default class Genome {
         gene.innovation = Innovation.getNext();
         gene.weight = Math.random() * 4 - 2;
 
-        // console.log("Inserting new gene: ", gene);
+        debug("Inserting new gene: ", gene);
         this.genes.push(gene);
     }
 
-    /* Takes a random gene, disables it, then creates a
-    a new neuron with 2 new genes, one gene going to the old genes
-    input and one to the old genes output. */
+    /**
+     * Takes a random gene, disables it, then creates a new neuron with 2 new genes, one gene going 
+     * from the old genes input to the new neuron, and one going from the new neuron to the old 
+     * genes output. 
+     */
     nodeMutate() {
-        // console.log("Performing node mutation");
+        debug("Performing node mutation");
         if (this.genes.length == 0) {
             return;
         }
@@ -342,7 +410,7 @@ export default class Genome {
         const gene1 = gene.clone();
         gene1.to = neuronId;
         gene1.weight = 1;
-        gene1.innovation = Innovation.getNext()
+        gene1.innovation = Innovation.getNext();
         gene1.enabled = true;
         this.genes.push(gene1);
 
@@ -353,42 +421,42 @@ export default class Genome {
         gene2.enabled = true;
         this.genes.push(gene2);
 
-        // console.log("Inserting new gene1: ", gene1);
-        // console.log("Inserting new gene2: ", gene2);
+        debug("Inserting new gene1: ", gene1);
+        debug("Inserting new gene2: ", gene2);
     }
 
+    /**
+     * Enables a random Gene (even if it is already enabled) 
+     */
     enableMutate() {
-        // console.log("Performing enableMutate");
+        debug("Performing enableMutate");
         if (this.genes.length == 0) return;
         const gene = this.getRandomGene();
-        // console.log("Enabling gene: ", gene);
+        debug("Enabling gene:", gene);
         gene.enabled = true;
     }
 
+    /**
+     * Disables a random Gene (even if it is already disabled)
+     */
     disableMutate() {
-        // console.log("Performing disableMutate");
+        debug("Performing disableMutate");
         if (this.genes.length == 0) return;
         const gene = this.getRandomGene();
-        // console.log("Disabling gene:", gene);
+        debug("Disabling gene:", gene);
         gene.enabled = false;
     }
 
+    /**
+     * Runs the neural network. Takes the input neurons and flows that information along the Genes
+     * to other Neurons and eventually to the output Neurons. 
+     */
     calculateWeights() {
-        // const neuronsWithValues = this.neurons.filter((n) => n.value != 0).map((n) => n.id);
-        // console.log("Neurons with values: ", neuronsWithValues);
         for (let i = 0; i < this.neurons.length; i++) {
             let neuron = this.neurons[i];
             if (!neuron) continue;
             if (neuron.incoming.length > 0) {
                 let sum = 0;
-            // if (neuron.incoming.length > 0) {
-            //     let incomingNeuronIds = neuron.incoming.map((i) => i.from); 
-            //     console.log("Incoming neuron Ids: ", incomingNeuronIds);
-            //     let matchingNeurons = incomingNeuronIds.filter((id) => neuronsWithValues.includes(id))
-            //     if (matchingNeurons.length > 0) {
-            //         console.log("Found matching ids: ", matchingNeurons);
-            //     }
-            // }
                 for (let j = 0; j < neuron.incoming.length; j++) {
                     let incoming = neuron.incoming[j];
                     let other = this.neurons[incoming.from];
