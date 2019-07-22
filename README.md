@@ -73,28 +73,6 @@ This will compile all the src files into `dist/nodejs/` then run `node dist/node
 
 To watch a battle between two AI's you can do the following:
 
-## Definitions
-
-- Species - A species is a distinct set of AI's that inherit genes from each other. Each species contains many genomes. 
-- Genome - A genome is a collection of genes which define how an bot acts. Each bot has one genome. 
-- Gene - A gene describes a link between two neurons in the AI's brain. Each gene belongs to one genome and a genome has many genes. 
-- Innovation - An innovation number is given to each gene upon creation. If a gene is passed to a child it is given the same innovation number. When two parents create children all genes come from the strongest parent, except those genes with the same innovation number, they are picked from one parent at random. 
-
-### Innovation Numbers
-
-The reason genes have innovation numbers is because if you picked genes randomly the children of even smart parents would
-be pretty stupid. 
-
-For example uou could have a parent that is good at shooting and a parent that is good at moving, and if they have a child 
-you'd expect it would take one 'shooting' gene, and one 'moving' gene from each parent. If you picked genes randomly the 
-child may instead get a 'moving' gene from each parent and no gene for shooting, and it would be significantly worse than 
-the previous generation.
-
-By giving an innovation number to each gene, and genes keep that innovation number when passing to children, you can make 
-children only swap out genes that have the same genesis, so they are likely to be doing roughtly the same thing. This way
-all children of the above parents should have at least one shooting gene, and one moving gene, and if they're lucky they'll
-get the best genes from each parent (but that part is random, it is evolution after all).
-
 ## Configuration Options
 
 All config options are stored in the file `config/default.json`
@@ -104,6 +82,44 @@ maxWorkers - int - The total worker threads to spawn when training in NodeJS mod
 initialSpecies - int - The total species created at the beginning
 initialGenomesPerSpecies - int - The total genomes in each species
 ```
+
+## Definitions
+
+- Species - A species is a distinct set of AI's that inherit genes from each other. Each species contains many genomes. 
+- Genome - A genome is a collection of genes which define how an bot acts. Each bot has one genome. 
+- Gene - A gene describes a link between two neurons in the AI's brain. Each gene belongs to one genome and a genome has many genes. 
+- Innovation - An innovation number is given to each gene upon creation. If a gene is passed to a child it is given the same innovation number. When two parents create children all genes come from the strongest parent, except those genes with the same innovation number, they are picked from one parent at random. 
+
+## AI Implementation FAQ
+
+### How does the bot brain map work?
+
+When the bot receives input from the battleground it takes those player and bullet positions and turns
+it into a map that is relative to the bots position and direction, so the bot is the center of the world
+and everything else moves/rotates around it. 
+
+This is so that the bot can learn quicker, as it can learn that if a bullet is heading towards it 
+from the right it needs to move forward or backward to dodge it etc. 
+
+If the bot neural network just took in the raw data it would take a lot longer to learn as the bots 
+decisions would be highly related to it's current position and it would be almost impossible for it 
+to come up with a general algorithm to dodge bullets or aim at the enemy in every possible position/rotation combination.  
+
+### What are Innovation Numbers?
+
+The reason genes have innovation numbers is because if you picked genes randomly the children of even
+smart parents would be pretty stupid. 
+
+For example you could have a parent that is good at shooting and a parent that is good at moving, and
+if they have a child you'd expect it would take one 'shooting' gene, and one 'moving' gene from each 
+parent. If you picked genes randomly the child may instead get a 'moving' gene from each parent and 
+no gene for shooting, and it would be significantly worse than the previous generation.
+
+By giving an innovation number to each gene, and genes keep that innovation number when passing to 
+children, you can make children only swap out genes that have the same genesis, so they are likely 
+to be doing roughtly the same thing. This way all children of the above parents should have at least 
+one shooting gene, and one moving gene, and if they're lucky they'll get the best genes from each 
+parent (but that part is random, it is evolution after all).
 
 
 ## License

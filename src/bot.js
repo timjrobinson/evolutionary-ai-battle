@@ -1,5 +1,18 @@
+/**
+ * This class controls the bots actions. It takes in the world state from the battleground each tick, 
+ * and responds with the actions the bot is going to take in that tick. 
+ * 
+ * It does this through the following steps:
+ *  - Collect the bot and bullet positions from the battleground
+ *  - Build a map of the world relative to the bots position and direction (see README for further details on why)
+ *  - Turn that map of the world into the input layer of the neural network
+ *  - Run the neural network, making neurons fire based on that input layer
+ *  - Take the output layer of the neural network and make decisions based on that
+ */
+
 import { translateMatrix, rotateAroundPoint, degreesToRadians, sigmoid } from './math';
 import Genome from './genome';
+const debug = require("debug")("eai:bot");
 
 import {
     MAP_WIDTH,
@@ -18,10 +31,6 @@ import {
     PLAYER2_START_ROTATION,
     MAX_SPEED
 } from './constants'
-
-/* Codespace = {
-    dx, dy, dh, ds, xPos, yPos, rotation, bullets, otherPlayer
-} */
 
 class Bot {
     constructor(id) {
@@ -46,14 +55,25 @@ class Bot {
         this.genome = genome;
     }
     
+    /**
+     * Chooses a random non-neural network based AI method for the bot. This is used for the second
+     * bot in the battle so that the first bot can learn to beat these random AI's initially. If both
+     * bots used a neural network they wouldn't do much in the beginning. 
+     * 
+     * As more and more generations are played there is a higher chance that the second bot will use
+     * a neural network instead of one of these random algorithms. This is so that eventually it will
+     * be a competition of the best neural networks and they learn and evolve against each other.  
+     * 
+     * @param {int} totalGenerations 
+     */
     selectAIMethod(totalGenerations) {
         const chanceToChooseRealGenome = totalGenerations / 100;
         if (Math.random() < chanceToChooseRealGenome) {
-            console.log("Using real Genome for AI");
+            debug("Using real Genome for AI");
             return; // Will use real genome
         }
-        const randomMethod = Math.floor(Math.random() * 5); // 5th method is to use the gnome assigned like player1
-        console.log("AI Method chosen: " + randomMethod);
+        const randomMethod = Math.floor(Math.random() * 4); 
+        debug("AI Method chosen: " + randomMethod);
 
         switch (randomMethod) {
             case 0: return this.aiMethod = this.createRandomOutputObject.bind(this)
@@ -63,33 +83,53 @@ class Bot {
         }
     }
 
+    /** 
+     * Creates and returns the output object describing the actions the bot is performing this tick.
+     */
     createOutputObject() {
-        if (this.id == 2 && this.aiMethod) {
+        /* If an aiMethod has been chosen, use that instead of a neural network */
+        if (this.aiMethod) {
             return this.aiMethod();
         }
-        // There should be a total of 16 output nodes, 5 bits for each movement / rotation and another bit on if it should shoot or not
         const neurons = this.genome.neurons;
+
+        /** 
+         * The outputNeurons are at the very end of the neuron list. Each neuron corrosponds to one 
+         * action that the bot will take if it's value is > 0
+         *      0 = left
+         *      1 = right
+         *      2 = up
+         *      3 = down
+         *      4 = rotate left
+         *      5 = rotate down
+         *      6 = shoot
+         */
         const outputNeurons = neurons.slice(MAX_NEURONS, neurons.length);
+
+        /**
+         * For each outputNeuron if its value is > 0 then the outputValue is set to 1 and the action
+         * is performed. 
+         */
         const outputValues = outputNeurons.map((neuron) => {
             return neuron.value > 0 ? 1 : 0;
         });
 
-        // First bit is if it's negative, other 4 bits are 0 -> 15
-        // let dx = outputValues[0] == 0 ? -1 : 1; 
-        // dx *= (outputValues[1] * 1 + outputValues[2] * 2 + outputValues[3] * 4 + outputValues[4] * 8);
-        // let dy = outputValues[5] == 0 ? -1 : 1;
-        // dy *= (outputValues[6] * 1 + outputValues[7] * 2 + outputValues[8] * 4 + outputValues[9] * 8);
-        // let dh = outputValues[10] == 0 ? -1 : 1;
-        // dh *=  (outputValues[11] * 1 + outputValues[12] * 2 + outputValues[13] * 4 + outputValues[14] * 8);
+        /**
+         * Set the bots x and y speed based on the outputValues 0 - 3
+         */
+        const dx = outputValues[0] * -MAX_SPEED + outputValues[1] * MAX_SPEED;
+        const dy = outputValues[2] * -MAX_SPEED + outputValues[3] * MAX_SPEED;
 
-        let dx = outputValues[0] * -MAX_SPEED + outputValues[1] * MAX_SPEED;
-        let dy = outputValues[2] * -MAX_SPEED + outputValues[3] * MAX_SPEED;
-
-        // Translate what the bot thinks it wants to do into real world space (as the bots vision is based on its direction)
+        /**
+         * Set the bots rotation speed based on the outputValues 4 -5
+         * First we need to translate what the bot thinks it wants to do into real world space, 
+         * as the bots neural network is based on the direction it's facing, so when it says "I want 
+         * to move right" while it's facing to the west it actually means it wants to move up in the 
+         * real world.
+         */
         const translatedDx = Math.cos(degreesToRadians(this.rotation)) * dx - Math.sin(degreesToRadians(this.rotation)) * dy;
         const translatedDy = Math.sin(degreesToRadians(this.rotation)) * dx + Math.cos(degreesToRadians(this.rotation)) * dy;
-
-        let dh = outputValues[4] * -MAX_SPEED + outputValues[5] * MAX_SPEED
+        const dh = outputValues[4] * -MAX_SPEED + outputValues[5] * MAX_SPEED
 
         return {
             dx: translatedDx, 
@@ -99,6 +139,10 @@ class Bot {
         }
     }
 
+    /** 
+     * AI Method - RandomOutput
+     * Returns some random movement and shoot variables
+     */
     createRandomOutputObject() {
         return {
             dx: Math.floor(Math.random() * 30) - 15,
@@ -108,6 +152,10 @@ class Bot {
         }
     }
 
+    /**
+     * AI Method - StandAndShoot
+     * Bot does not move and shoots randomly in its starting orientation
+     */
     createStandAndShootOutputObject() {
         return {
             dx: 0,
@@ -117,6 +165,10 @@ class Bot {
         }
     }
 
+    /**
+     * AI Method - VerticleShoot 
+     * The bot moves down the screen shooting randomly
+     */
     createMoveVerticalAndShootOutputObject() {
         return {
             dx: 0,
@@ -126,6 +178,10 @@ class Bot {
         }
     }
 
+    /**
+     * AI Method - Spin and Shoot 
+     * The bot moves towards the opponent spinning and shooting constantly
+     */
     createSpinAndShootOutputObject() {
         return {
             ds: true,
@@ -135,7 +191,12 @@ class Bot {
         }
     }
 
-
+    /**
+     * Sets the input layer of the neural network with the positions of players and bullets, after 
+     * some translation has been done to make them relative to the bots position/orientation. 
+     * 
+     * @param {NNInputs} inputs 
+     */
     updateNetwork(inputs) {
         this.updateBotPosition(inputs.xPos, inputs.yPos, inputs.rotation)
         this.otherPlayer = inputs.otherPlayer;
@@ -144,18 +205,29 @@ class Bot {
         this.drawBrainView(translatedPositions);
     }
 
+    /**
+     * Updates this bots position and rotation. 
+     * 
+     * @param {int} xPos bots x-position
+     * @param {int} yPos bots y-position
+     * @param {int} rotation angle in degrees (0 - 360)
+     */
     updateBotPosition(xPos, yPos, rotation) {
         this.xPos = xPos
         this.yPos = yPos
         this.rotation = rotation
     }
 
+    /**
+     * Takes the global positions of all players and bullets and turns then into local positions 
+     * relative to the bots position and location, so the world rotates around the bot. 
+     * 
+     * @param {PlayerInfo} otherPlayer 
+     */
     translateObjectPositions(otherPlayer) {
         const playerXPos = this.xPos;
         const playerYPos = this.yPos;
         const rotationAngle =  degreesToRadians(-this.rotation);
-        const centerPointX = MAP_WIDTH / 2;
-        const centerPointY = MAP_HEIGHT / 2;
         const translationMatrix = [MAP_WIDTH - this.xPos, MAP_HEIGHT - this.yPos];
 
         const otherPlayerRotated = rotateAroundPoint(this.xPos, this.yPos, rotationAngle, [otherPlayer.xPos, otherPlayer.yPos]);
@@ -193,6 +265,18 @@ class Bot {
         }
     }
 
+    /**
+     * The neural network input layer is a array of size (mapWidth * mapHeight) / nnSquareSize
+     * each neuron corrosponds to a grid tile from left to right, top to bottom, where each grid tile
+     * is nnSquareSize pixels wide. So when `nnSquareSize = 50` neuron 1 is the tile at `0,0`, 
+     * neuron 2 is the tile at `50,0`, neuron 3 is `100,0` etc. 
+     * 
+     * Each nueron is set to the value 1 if the opponent is on the tile, or -1 if a bullet or wall is 
+     * there (where walls mark the edge of the battlefield). If there is nothing on that tile the 
+     * value is 0. 
+     * 
+     * @param {BattleInfo} translatedPositions - The translated positions of all world objects
+     */
     setInputNeurons(translatedPositions) {
         const neurons = this.genome.neurons;
         for (let i = 0; i < INPUT_NEURONS; i++) {
@@ -222,13 +306,18 @@ class Bot {
         }
     }
 
-
-    /* This gets the current inputs, and makes their input flow down the network
-    to get to the outputs and figure out what output to press */
+    /**
+     * Gets the current inputs, and runs the network, makes their input flow down the network
+     * to get to the output neurons.
+     **/
     calculateWeights() {
         this.genome.calculateWeights();
     }
 
+    /** 
+     * Draws a canvas view of what the world looks to the bot. Everything has been moved and rotated
+     * so that it is relative to the bots position and orientation.
+     **/
     drawBrainView(translatedPositions) {
         if (typeof document === "undefined") return;
 
@@ -243,26 +332,26 @@ class Bot {
 
             // Draw player, always in center. 
             ctx.fillStyle = playerColor;
-            const scaledXPos = this.scaleForBrain(MAP_WIDTH);
-            const scaledYPos = this.scaleForBrain(MAP_HEIGHT);
+            const scaledXPos = this.scaleForBrainView(MAP_WIDTH);
+            const scaledYPos = this.scaleForBrainView(MAP_HEIGHT);
             ctx.fillRect(scaledXPos, scaledYPos, BRAIN_CANVAS_SCALE, BRAIN_CANVAS_SCALE);
 
             //Draw other player and objects, translated to how this brain sees them. 
             ctx.fillStyle = enemyColor;
-            const opponentXPos = this.scaleForBrain(translatedPositions.xPos);
-            const opponentYPos = this.scaleForBrain(translatedPositions.yPos);
+            const opponentXPos = this.scaleForBrainView(translatedPositions.xPos);
+            const opponentYPos = this.scaleForBrainView(translatedPositions.yPos);
             ctx.fillRect(opponentXPos, opponentYPos, BRAIN_CANVAS_SCALE, BRAIN_CANVAS_SCALE);
 
             ctx.fillStyle = "#000000";
             translatedPositions.bullets.forEach((bullet) => {
-                const bulletXPos = this.scaleForBrain(bullet.xPos);
-                const bulletYPos = this.scaleForBrain(bullet.yPos);
+                const bulletXPos = this.scaleForBrainView(bullet.xPos);
+                const bulletYPos = this.scaleForBrainView(bullet.yPos);
                 ctx.fillRect(bulletXPos, bulletYPos, BRAIN_CANVAS_SCALE, BRAIN_CANVAS_SCALE);
             });
 
             translatedPositions.walls.forEach((wall) => {
-                const wallXPos = this.scaleForBrain(wall.xPos);
-                const wallYPos = this.scaleForBrain(wall.yPos);
+                const wallXPos = this.scaleForBrainView(wall.xPos);
+                const wallYPos = this.scaleForBrainView(wall.yPos);
                 ctx.fillRect(wallXPos, wallYPos, BRAIN_CANVAS_SCALE, BRAIN_CANVAS_SCALE);
             });
 
@@ -270,13 +359,25 @@ class Bot {
         }
     }
 
-    // Scales a value to display correctly on the brain graph
-    scaleForBrain(value) {
-        // We find the square of the neural network (each are NN_SQUARE_SIZE in width and height)
-        // Place the object in the one it's inside, and then scale based on the size of this brain canvas. 
+    /**
+     * Scales position values to fit the world onto the small brain view graph. 
+     * 
+     * @param {int} value 
+     */
+    scaleForBrainView(value) {
+        /**
+         * Find the square of the neural network (each are NN_SQUARE_SIZE in width and height) that 
+         * the value is inside, and then scale based on the size of this brain canvas. 
+         */
         return Math.floor(value / NN_SQUARE_SIZE) * BRAIN_CANVAS_SCALE;
     }
-
+ 
+    /**
+     * This is called by the BattleGround each tick. Takes the current world information 
+     * and returns the bots action for this tick. 
+     * 
+     * @param {BattleInfo} inputs 
+     */
     update(inputs) {
         this.updateNetwork(inputs);
         this.calculateWeights();
