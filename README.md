@@ -7,12 +7,11 @@ A 2D battleground simulation where AI's fight each other and evolve over time to
 Many colleges and companies hold virtual AI battles for their engineers. You are given a sandbox environment with a few 
 simple rules and must produce an AI algorithm that can beat all others. For a battle this year I decided to build an evolutionary
 algorithm based off the [Evolving Neural Networks through Augmenting Topologies (NEAT) paper](http://nn.cs.utexas.edu/downloads/papers/stanley.ec02.pdf)
-and heavily inspired by the [Mar/IO project](https://www.youtube.com/watch?v=qv6UVOQ0F44).
+and inspired by the [Mar/IO project](https://www.youtube.com/watch?v=qv6UVOQ0F44).
 
 The system initially creates 100 random genomes, then makes them fight each other, each AI playing 5 battles per round. At
 the end of each round the weakest bots are culled, and the strongest bots go on to have children, which inherit their parents
-genes plus get some random mutations of their own. The remaining parents and all the children then play each other in the next round. 
-Over time this leads to more and more intelligent AI's battling each other. 
+genes plus get some random mutations of their own. The remaining parents and all the children then play each other in the next round. Over time this leads to more and more intelligent AI's battling each other. 
 
 ### How battles work
 

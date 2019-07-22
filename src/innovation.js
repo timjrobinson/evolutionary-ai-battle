@@ -1,9 +1,10 @@
-/* This is a singleton class that returns an innovation number for a new gene
-Innovation numbers are used to keep track of genes when they are passed from
-parent to child. When doing child creation only the genes with the same innovation
-number from each parent are swapped so that genes are not 'lost' in the creation
-of the child */
-
+/**
+ * This is a singleton class that returns an innovation number for a new gene 
+ * Innovation numbers are used to keep track of genes when they are passed from 
+ * parent to child. When doing child creation only the genes with the same innovation 
+ * number from each parent are swapped so that genes are not 'lost' in the creation 
+ * of the child. See README for more information.
+*/
 class Innovation {
     constructor() {
         this.innovation = 0;
