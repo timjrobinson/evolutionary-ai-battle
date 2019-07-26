@@ -12,41 +12,36 @@
 
 import { translateMatrix, rotateAroundPoint, degreesToRadians, sigmoid } from './math';
 import Genome from './genome';
+import config from '../config/default.json';
 const debug = require("debug")("eai:bot");
 
 import {
-    MAP_WIDTH,
-    MAP_HEIGHT,
     BRAIN_CANVAS_SCALE,
     INPUT_WIDTH,
-    NN_SQUARE_SIZE,
-    MAX_NEURONS,
     INPUT_NEURONS,
-    STARTING_LIVES,
-    PLAYER1_START_X,
-    PLAYER1_START_Y,
-    PLAYER1_START_ROTATION,
-    PLAYER2_START_X,
-    PLAYER2_START_Y,
-    PLAYER2_START_ROTATION,
-    MAX_SPEED
 } from './constants'
+
+const MAP_WIDTH = config.mapWidth;
+const MAP_HEIGHT = config.mapHeight;
+const NN_SQUARE_SIZE = config.neuralNetworkSquareSize;
+const MAX_SPEED = config.maxSpeed;
+const STARTING_LIVES = config.startingLives;
 
 class Bot {
     constructor(id) {
         this.id = id;
-        this.xPos = PLAYER1_START_X;
-        this.yPos = PLAYER1_START_Y;
-        this.rotation = 0;
+        this.xPos = config.botStartPoses[0].xPos;
+        this.yPos = config.botStartPoses[0].yPos;
+        this.rotation = config.botStartPoses[0].rotation;
         this.bullets = [];
         this.lives = STARTING_LIVES;
         this.genome = new Genome();
         this.outputMethod = null;
 
         if (this.id > 1) {
-            this.xPos = PLAYER2_START_X;
-            this.yPos = PLAYER2_START_Y;
-            this.rotation = PLAYER2_START_ROTATION;
+            this.xPos = config.botStartPoses[1].xPos;
+            this.yPos = config.botStartPoses[1].yPos;
+            this.rotation = config.botStartPoses[1].rotation;
         }
 
     }
@@ -104,7 +99,7 @@ class Bot {
          *      5 = rotate down
          *      6 = shoot
          */
-        const outputNeurons = neurons.slice(MAX_NEURONS, neurons.length);
+        const outputNeurons = neurons.slice(config.maxNeurons, neurons.length);
 
         /**
          * For each outputNeuron if its value is > 0 then the outputValue is set to 1 and the action

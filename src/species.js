@@ -3,7 +3,7 @@
  * at the end of each generation all AI's only cull and reproduce within their Species. 
  */
 import Genome from "./genome";
-import { debug } from "winston";
+import log from './logger'
 
 const MAX_STALE_CHECKS = 15;
 const CROSSOVER_CHANCE = 75;
@@ -54,11 +54,11 @@ export default class Species {
             return b.fitness - a.fitness;
         });
 
-        debug("Culling Genomes")
+        log.debug("Culling Genomes")
         const remainingGenomes = allButOne ? 1 : Math.ceil(this.genomes.length / 2);
-        debug("Genomes before the cull: ", this.genomes);
+        log.debug("Genomes before the cull: ", this.genomes);
         this.genomes = this.genomes.slice(0, remainingGenomes)
-        debug("Genomes after the cull: ", this.genomes);
+        log.debug("Genomes after the cull: ", this.genomes);
     }
 
     /**

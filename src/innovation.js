@@ -11,7 +11,7 @@ class Innovation {
     }
 
     // Used when loading data from a file to set the innovation number to the current known max. 
-    // Only increases it if it's higher than teh current innovation number. 
+    // Only increases it if it's higher than the current innovation number. 
     setHighestInnovation(newInnovation) {
         this.innovation = Math.max(this.innovation, newInnovation);
     }

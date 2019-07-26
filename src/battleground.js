@@ -5,29 +5,22 @@
  * as fast as your computer can handle. 
  */
 import { distanceBetweenPoints } from './math';
+import config from '../config/default.json'
 
-import {
-    TICK_TIME,
-    BOT_SIZE,
-    MAX_SPEED,
-    MOVE_SPEED_MULTIPLIER,
-    BULLET_SIZE,
-    BULLET_SPEED,
-    MAP_WIDTH,
-    MAP_HEIGHT,
-} from './constants'
-
-const BOT_RADIUS = BOT_SIZE / 2;
-const BULLET_RADIUS = BULLET_SIZE / 2;
+const TICK_TIME = config.tickTime;
+const BOT_RADIUS = config.botSize / 2;
+const BULLET_RADIUS = config.bulletSize / 2;
 
 const MIN_X_POS = 0 + BOT_RADIUS;
 const MIN_Y_POS = 0 + BOT_RADIUS;
-const MAX_X_POS = MAP_WIDTH - BOT_RADIUS;
-const MAX_Y_POS = MAP_HEIGHT - BOT_RADIUS;
+const MAX_X_POS = config.mapWidth - BOT_RADIUS;
+const MAX_Y_POS = config.mapHeight - BOT_RADIUS;
+const MAX_SPEED = config.maxSpeed;
+const BULLET_SPEED = config.bulletSpeed;
 
-const NO_ACTION_TIMEOUT = 5;
-const NO_MOVE_TIMEOUT = 15;
-const BATTLE_TIMEOUT = 60;
+const NO_ACTION_TIMEOUT = config.noActionTimeout;
+const NO_MOVE_TIMEOUT = config.noMoveTimeout;
+const BATTLE_TIMEOUT = config.maxRoundTime;
 
 class Battleground {
     constructor() {

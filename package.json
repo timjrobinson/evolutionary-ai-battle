@@ -5,8 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "compile-browser": "npx webpack",
-    "compile-node": "babel --presets es2015 -d dist/nodejs/ src",
-    "train": "npm run compile-node && node dist/nodejs/coordinator.js"
+    "compile-node": "babel --presets es2015 -d dist/ src",
+    "train": "npm run compile-node && node dist/coordinator.js"
   },
   "author": "",
   "license": "ISC",
@@ -23,7 +23,6 @@
   "dependencies": {
     "@babel/polyfill": "^7.4.3",
     "async": "^2.6.2",
-    "config": "^3.2.2",
     "debug": "^4.1.1",
     "uuid": "^3.3.2",
     "winston": "^3.2.1"

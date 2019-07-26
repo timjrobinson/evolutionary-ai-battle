@@ -5,21 +5,17 @@
  */
 import Species from './species'
 import Genome from './genome';
-const config = require("config");
-const debug = require("debug")("eai:trainer")
+import config from '../config/default.json';
+import log from './logger'
+import Debug from 'debug';
+const debug = Debug("eai:trainer");
 
-import {
-    INPUT_NEURONS,
-    OUTPUT_NEURONS,
-    MAX_NEURONS,
-    DELTA_DISJOINT,
-    DELTA_WEIGHTS,
-    DELTA_THRESHOLD
-} from './constants'
-
-const INITIAL_SPECIES = config.get("initialSpecies");
-const INITIAL_GENOMES_PER_SPECIES = config.get("initialGenomesPerSpecies");
-const POPULATION = config.get("population");
+const DISJOINT_MULTIPLIER = config.disjointMultiplier;
+const WEIGHT_MULTIPLIER = config.weightMultiplier;
+const DELTA_THRESHOLD = config.deltaThreshold;
+const INITIAL_SPECIES = config.initialSpecies;
+const INITIAL_GENOMES_PER_SPECIES = config.initialGenomesPerSpecies;
+const POPULATION = config.population;
 
 export default class Trainer {
     constructor() {
@@ -251,8 +247,8 @@ export default class Trainer {
      * @param {Genome} genome2 
      */
     isSameSpecies(genome1, genome2) {
-        const dd = DELTA_DISJOINT * this.disjoint(genome1.genes, genome2.genes);
-        const dw = DELTA_WEIGHTS * this.weights(genome1.genes, genome2.genes);
+        const dd = DISJOINT_MULTIPLIER * this.disjoint(genome1.genes, genome2.genes);
+        const dw = WEIGHT_MULTIPLIER * this.weights(genome1.genes, genome2.genes);
         return dd + dw < DELTA_THRESHOLD
     }
 

@@ -8,7 +8,6 @@
 import {
     INPUT_NEURONS,
     OUTPUT_NEURONS,
-    MAX_NEURONS
 } from './constants'
 
 import {
@@ -16,21 +15,8 @@ import {
 } from './math'
 
 import Innovation from './innovation'
+import config from '../config/default.json'
 const debug = require("debug")("eai:genome");
-
-const INITIAL_MUTATION_RATE = 1;
-
-const PARENT2_INNOVATION_GENE_CHANCE = 0.5;
-const MUTATION_TYPES = ['connections', 'link', 'node', 'enable', 'disable'];
-
-const MUTATE_CONNECTION_CHANCE = 0.25;
-const PERTUBE_CHANCE = 0.9;
-const MUTATE_LINK_CHANCE = 2;
-const MUTATE_NODE_CHANCE = 0.5;
-const MUTATE_BIAS_CHANCE = 0.4;
-const MUTATE_DISABLE_CHANCE = 0.4;
-const MUTATE_ENABLE_CHANCE = 0.2;
-const STEP_SIZE = 0.1;
 
 /**
  * A Gene is a link between two neurons. 
@@ -88,12 +74,12 @@ export default class Genome {
         this.genes = [];
         this.neurons = [];
         this.mutationRates = {
-            connections: MUTATE_CONNECTION_CHANCE,
-            link: MUTATE_LINK_CHANCE,
-            node: MUTATE_NODE_CHANCE,
-            enable: MUTATE_ENABLE_CHANCE,
-            disable: MUTATE_DISABLE_CHANCE,
-            step: STEP_SIZE
+            connections: config.mutateConnectionChance,
+            link: config.mutateLinkChance,
+            node: config.mutateNodeChance,
+            enable: config.mutateEnableChance,
+            disable: config.mutateDisableChance,
+            step: config.stepSize
         };
         this.fitness = 0;
         this.globalRank = 0;
@@ -196,7 +182,7 @@ export default class Genome {
         }
 
         for (let i = 0; i < OUTPUT_NEURONS; i++) {
-            let id = MAX_NEURONS + i;
+            let id = config.maxNeurons + i;
             this.neurons[id] = this.createNeuron(id);
         }
 
@@ -235,7 +221,7 @@ export default class Genome {
             let geneParent = parent1;
             let gene1 = parent1.genes[i];
             let gene2 = parent2Innovations[gene1.innovation];
-            if (gene2 != null && Math.random() < PARENT2_INNOVATION_GENE_CHANCE && gene2.enabled) {
+            if (gene2 != null && Math.random() < config.secondParentInnovationGeneChance && gene2.enabled) {
                 this.genes.push(gene2.clone());
             } else {
                 this.genes.push(gene1.clone())
@@ -342,7 +328,7 @@ export default class Genome {
         const step = this.mutationRates.step;
 
         this.genes = this.genes.map((gene) => {
-            if (Math.random() < PERTUBE_CHANCE) {
+            if (Math.random() < config.pertubeChance) {
                 gene.weight = gene.weight + Math.random() * step * 2 - step;
             } else {
                 gene.weight = Math.random() * 4 - 2;

@@ -6,8 +6,8 @@
 import Bot from './bot'
 import Battleground from './battleground'
 import Trainer from './trainer'
-const log = require("winston");
-
+import config from '../config/default.json'
+import log from './logger'
 const trainer = new Trainer();
 
 /**
@@ -42,7 +42,7 @@ function battle() {
     battleground.start((results) => {
         log.info("Battle results: ", results);
 
-        const maxRoundTime = config.get("maxRoundTime");
+        const maxRoundTime = config.maxRoundTime;
 
         /* Give the bot an initial fitness of 20 points for each life it took off the opponent */
         let botFitness =  ((5 - bot2.lives) * 20);

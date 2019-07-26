@@ -15,12 +15,12 @@ const uuid = require("uuid");
 const cluster = require('cluster');
 const async = require("async");
 const fs = require("fs");
-const log = require("winston");
 
 import Bot from './bot'
 import Battleground from './battleground'
 import Trainer from './trainer'
 import Genome from './genome'
+import log from './logger'
 
 
 /** 
@@ -43,7 +43,7 @@ function trainerProcess() {
     const workers = [];
 
     const trainer = new Trainer();
-    trainer.initializeSpecies();
+    trainer.createInitialSpecies();
     startBattle(runId, trainer);
 }
 

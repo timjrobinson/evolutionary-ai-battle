@@ -21,16 +21,28 @@
   ],
   "startingLives": 5,
   "tickTime": 75,
-  "maxRoundTime": 60,
   "botSize": 36,
   "maxSpeed": 15,
   "bulletSize": 20,
   "bulletSpeed": 20,
 
+  "maxRoundTime": 60,
+  "noActionTimeout": 5,
+  "noMoveTimeout": 15,
+
   "neuralNetworkSquareSize": 50,
   "maxNeurons": 10e4,
+
+  "mutateConnectionChance": 0.25,
+  "pertubeChance": 0.9,
+  "mutateLinkChance": 2,
+  "mutateNodeChance": 0.5,
+  "mutateDisableChance": 0.4,
+  "mutateEnableChance": 0.2,
+  "stepSize": 0.1,
+  "secondParentInnovationGeneChance": 0.5,
   
-  "deltaDisjoint": 2,
-  "deltaWeights": 0.4,
+  "disjointMultiplier": 2,
+  "weightMultiplier": 0.4,
   "deltaThreshold": 1
 }
