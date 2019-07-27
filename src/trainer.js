@@ -43,15 +43,28 @@ export default class Trainer {
      * Load Species from JSON data
      */
     loadSpeciesFromJSON(data) {
-        if (Array.isArray(data)) {
-            data.forEach((speciesData) => {
-                const species = Species.loadFromJSON(speciesData);
-                this.species.push(species);
-            });
+        if (!data.species || !Array.isArray(data.species)) {
+            console.error("Could not load JSON file. data.species not found");
             return;
         }
-        const species = Species.loadFromJSON(data);
-        this.species.push(species);
+        data.species.forEach((speciesData) => {
+            const species = Species.loadFromJSON(speciesData);
+            this.species.push(species);
+        });
+        this.totalGenerations = data.totalGenerations;
+    }
+
+    /**
+     * Serialize all species into a JSON array for writing to disk
+     * Also save out the totalGenerations for future reference
+     */
+    serializeSpecies() {
+        const serializedData = {};
+        serializedData.species = this.species.map((species) => {
+            return species.serialize();
+        });
+        serializedData.totalGenerations = this.totalGenerations;
+        return JSON.stringify(serializedData);
     }
 
     /**

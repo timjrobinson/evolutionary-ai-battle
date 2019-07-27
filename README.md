@@ -45,6 +45,8 @@ npm install
 
 You can either train one game at a time in your browser, or run many games in parallel using NodeJS. NodeJS will get you semi-intelligent AI's much quicker however you won't be able to see the games being played. 
 
+You can first train many games using NodeJS and then view some of the battles between the advanced AI's in your browser. To do this see the top of the `src/index.js` file, there are two lines which you can uncomment to load pre-generated species'. 
+
 #### Browser Training
 
 - `npm run compile-browser` to run webpack and compile all the files. 

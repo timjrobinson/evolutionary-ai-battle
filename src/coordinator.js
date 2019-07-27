@@ -40,14 +40,14 @@ if (cluster.isMaster) {
 function trainerProcess() {
     const runId = uuid.v1().toString().slice(0, 8);
     log.info("Run ID: " + runId);
+    fs.mkdirSync(`species/${runId}/`, {recursive: true});
     const workers = [];
-
     const trainer = new Trainer();
     trainer.createInitialSpecies();
-    startBattle(runId, trainer);
+    startGenerationBattles(runId, trainer);
 }
 
-function startBattle(runId, trainer) {
+function startGenerationBattles(runId, trainer) {
     let roundsRemaining = trainer.getTotalRoundsRemaining();
     async.timesSeries(roundsRemaining, (i, next) => {
         log.info(`Starting round ${i}...`);
@@ -59,11 +59,11 @@ function startBattle(runId, trainer) {
                 log.info(`${roundsRemaining} rounds remaining`);
                 if (roundsRemaining <= 0) {
                     log.info("Saving current generation of species to disk");
-                    const serializedSpecies = JSON.stringify(trainer.species.map((species) => species.serialize()));
-                    fs.writeFile(`${runId}-generation-${trainer.totalGenerations}-species.json`, serializedSpecies, (err, result) => {
+                    const serializedSpecies = trainer.serializeSpecies();
+                    fs.writeFile(`species/${runId}/${runId}-generation-${trainer.totalGenerations}-species.json`, serializedSpecies, (err, result) => {
                         log.info("Creating new generation")
                         trainer.newGeneration();
-                        setTimeout(startBattle.bind(this, runId, trainer));
+                        setTimeout(startGenerationBattles.bind(this, runId, trainer));
                     });
                 }
             });
