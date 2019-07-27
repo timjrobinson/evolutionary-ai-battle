@@ -34,11 +34,22 @@ class Battleground {
         this.lastShootTime = [Date.now(), Date.now()];
     }
 
+    /**
+     * Add both bots to the battleground 
+     * @param {Bot} bot1 
+     * @param {Bot} bot2 
+     */
     addBots(bot1, bot2) {
         this.bots.push(bot1)
         this.bots.push(bot2)
     }
 
+    /**
+     * Initializes all the variables for the battle and starts the battleground. 
+     * Sets updateBots function to run every TICK_TIME, while the update and draw
+     * functions run at 10ms to make the game look smooth. 
+     * @param {Function} onEnd - callback to call after the battle has ended
+     */
     start(onEnd) {
         console.log("Starting battleground");
         this.onEnd = onEnd;
@@ -52,6 +63,10 @@ class Battleground {
         this.drawInterval = setInterval(this.draw.bind(this), 10);
     }
 
+    /**
+     * End the battle, clearing all the update timers, calculating results and reporting those 
+     * results to the onEnd callback function.
+     */
     end() {
         if (!this.onEnd) return;
 
@@ -77,6 +92,12 @@ class Battleground {
         this.onEnd = null;
     }
 
+    /**
+     * Calls the bot update function with the current game state, then retrieves the actions the bot
+     * wants to take and returns them to the calling function.  
+     * @param {Bot} bot 
+     * @param {Bot} otherBot 
+     */
     updateBot(bot, otherBot) {
         const gameState = {
             xPos: bot.xPos,
@@ -94,6 +115,11 @@ class Battleground {
         return botActions;
     }
 
+    /** 
+     * Main update loop for the two bots in the world. Gathers their actions which are then used
+     * in the update loop. Also keeps track of the last time bot1 (the bot we are training) 
+     * performed an action so that if it stops doing anything for a while the battlefield ends.  
+     */
     updateBots() {
         this.botActions[0] = this.updateBot(this.bots[0], this.bots[1]);
         this.botActions[1] = this.updateBot(this.bots[1], this.bots[0]);
@@ -111,14 +137,31 @@ class Battleground {
         }
     }
 
+    /**
+     * Takes a set of actions returned from the bot.update function and determines if the bot 
+     * is actually taking any action. Returns true if the bot is doing anything, false if not.  
+     * @param {Object} botActions 
+     */
     botDidActions(botActions) {
         return botActions.dx != 0 || botActions.dy != 0 || botActions.dh != 0 || botActions.ds != 0;
     }
 
+    /**
+     * Compares the bots old position to it's new posittion. Returns true if the bot moved, false
+     * if the bot did not move.  
+     * @param {Bot} bot 
+     * @param {int} newXPos 
+     * @param {int} newYPos 
+     */
     botMoved(bot, newXPos, newYPos) {
         return bot.xPos != newXPos || bot.yPos != newYPos;
     }
 
+    /**
+     * The main update loop of the battlefield. Takes the actions for each bot and makes the bots
+     * move around and shoot based on them. Then calculates if any bullets collided, checks lives
+     * lost, and ends the game if there is a final winner. 
+     */
     update() {
         const delta = (Date.now() - this.lastUpdate) / 1000;
         const moveSpeedMultiplier = 1000 / TICK_TIME; // Bots actually move at maxSpeed every 75ms not every 1000ms.
@@ -187,6 +230,9 @@ class Battleground {
         }
     }
 
+    /**
+     * Draws the main battlefield to the screen. Does not run in NodeJS training mode
+     */
     draw() {
         if (typeof document === "undefined") return;
 
@@ -230,6 +276,9 @@ class Battleground {
         }
     }
 
+    /** 
+     * Returns a bullet object given a position and rotation
+     */
     spawnBullet(xPos, yPos, rotation) {
         return {
             xPos,
