@@ -3,14 +3,16 @@
 
 import config from '../config/default.json'
 
+/**
+ * The brain is only has a width as it's always a square so that when the bot rotates the entire
+ * map can still fit in its brain. 
+ */
 export const BRAIN_WIDTH = config.mapWidth * 2; 
-export const BRAIN_HEIGHT = config.mapHeight * 2;
 
 export const BRAIN_CANVAS_WIDTH = 400;
 export const BRAIN_CANVAS_SCALE = (BRAIN_CANVAS_WIDTH / (BRAIN_WIDTH / config.neuralNetworkSquareSize)); 
 
 export const INPUT_WIDTH = BRAIN_WIDTH / config.neuralNetworkSquareSize;
-export const INPUT_HEIGHT = BRAIN_HEIGHT / config.neuralNetworkSquareSize;
-export const INPUT_NEURONS = INPUT_WIDTH * INPUT_HEIGHT;
+export const INPUT_NEURONS = INPUT_WIDTH * INPUT_WIDTH;
 
 export const OUTPUT_NEURONS = 7;

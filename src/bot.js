@@ -237,16 +237,16 @@ class Bot {
             walls.push({xPos: MAP_WIDTH + (NN_SQUARE_SIZE / 2), yPos: i});
         }
          
-
+        const verticalOffset = this.getVerticalOffset();
         return {
             xPos: otherPlayerTranslated[0],
-            yPos: otherPlayerTranslated[1],
+            yPos: otherPlayerTranslated[1] + verticalOffset,
             bullets: otherPlayer.bullets.map((bullet) => {
                 const bulletRotated = rotateAroundPoint(playerXPos, playerYPos, rotationAngle, [bullet.xPos, bullet.yPos]);
                 const bulletTranslated = translateMatrix(translationMatrix, bulletRotated);
                 return {
                     xPos: bulletTranslated[0],
-                    yPos: bulletTranslated[1]
+                    yPos: bulletTranslated[1] + verticalOffset
                 }
             }),
             walls: walls.map((wall) => {
@@ -254,10 +254,22 @@ class Bot {
                 const wallTranslated = translateMatrix(translationMatrix, wallRotated);
                 return {
                     xPos: wallTranslated[0],
-                    yPos: wallTranslated[1]
+                    yPos: wallTranslated[1] + verticalOffset
                 }
             })
         }
+    }
+
+    /** 
+     * Because the battlefield rotates in the bots brain, the brain must be a square whose width is 
+     * the longest axis of the battlefield. If the brain was not square when the bot turns 90 degrees
+     * the entire battlefield wouldn't fit in its brain. 
+     * 
+     * So this function gets the amount that we need to vertically move the translated positions so 
+     * that after translation all positions are positive (nothing has fallen off the top of the screen)
+     */
+    getVerticalOffset() {
+        return MAP_WIDTH - MAP_HEIGHT;
     }
 
     /**
@@ -328,7 +340,7 @@ class Bot {
             // Draw player, always in center. 
             ctx.fillStyle = playerColor;
             const scaledXPos = this.scaleForBrainView(MAP_WIDTH);
-            const scaledYPos = this.scaleForBrainView(MAP_HEIGHT);
+            const scaledYPos = this.scaleForBrainView(MAP_HEIGHT + this.getVerticalOffset());
             ctx.fillRect(scaledXPos, scaledYPos, BRAIN_CANVAS_SCALE, BRAIN_CANVAS_SCALE);
 
             //Draw other player and objects, translated to how this brain sees them. 
