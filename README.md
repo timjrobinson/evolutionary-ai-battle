@@ -1,6 +1,6 @@
 # Evolutionary AI Battle
 
-A 2D battleground simulation where AI's fight each other and evolve over time to become better and better. 
+A 2D battleground simulation where AI's fight each other and evolve over time. 
 
 ## Overview
 
@@ -161,7 +161,6 @@ children, you can make children only swap out genes that have the same genesis, 
 to be doing roughtly the same thing. This way all children of the above parents should have at least 
 one shooting gene, and one moving gene, and if they're lucky they'll get the best genes from each 
 parent (but that part is random, it is evolution after all).
-
 
 ## License
 

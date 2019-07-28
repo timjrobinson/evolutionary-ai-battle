@@ -1,15 +1,16 @@
 {
   "name": "evolutionary-ai-battle",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "A 2D battleground simulation where AI's fight each other and evolve over time.",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "compile-browser": "npx webpack",
     "compile-node": "npx babel -d dist/ src",
     "train": "npm run compile-node && node dist/coordinator.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Tim Robinson <tim@timjrobinson.com>",
+  "license": "MIT",
   "devDependencies": {
     "@babel/cli": "^7.5.5",
     "@babel/core": "^7.5.5",
@@ -18,7 +19,6 @@
     "webpack-cli": "^3.3.0"
   },
   "dependencies": {
-    "@babel/polyfill": "^7.4.4",
     "async": "^2.6.2",
     "debug": "^4.1.1",
     "uuid": "^3.3.2",
