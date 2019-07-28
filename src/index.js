@@ -16,7 +16,7 @@ const trainer = new Trainer();
  * training with them.  
  */
 
-import existingSpecies from "../species/e70a8090/e70a8090-generation-18-species.json";
+import existingSpecies from "../species/e70a8090/e70a8090-generation-875-species.json";
 trainer.loadSpeciesFromJSON(existingSpecies);
 
 if (!trainer.species.length) {
@@ -35,6 +35,7 @@ function battle() {
      * it starts using genomes for its movement. 
      **/
     const bot2 = new Bot(2);
+    bot2.loadGenome(trainer.getTopGenome());
     bot2.selectAIMethod(trainer.totalGenerations);
 
     const battleground = new Battleground()
