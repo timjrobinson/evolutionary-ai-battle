@@ -16,8 +16,8 @@ const trainer = new Trainer();
  * training with them.  
  */
 
-import existingSpecies from "../species/e70a8090/e70a8090-generation-875-species.json";
-trainer.loadSpeciesFromJSON(existingSpecies);
+// import existingSpecies from "../species/SPECIESID/SPECIESID-generation-GENERATION-species.json";
+// trainer.loadSpeciesFromJSON(existingSpecies);
 
 if (!trainer.species.length) {
     trainer.createInitialSpecies();
