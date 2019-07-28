@@ -29,7 +29,7 @@ for NodeJS using Babel. The browser entrypoint is `src/index.js` and the NodeJS 
 
 You can either train one game at a time in your browser, or run many games in parallel using NodeJS. NodeJS will get you semi-intelligent AI's much quicker however you won't be able to see the games being played. 
 
-You can first train many games using NodeJS and then view some of the battles between the advanced AI's in your browser. To do this see the top of the `src/index.js` file, there are two lines which you can uncomment to load pre-generated species'. 
+You can first train many games using NodeJS and then view some of the battles between the advanced AI's in your browser. To do this see the "Watching" section below.
 
 #### Browser Training
 
@@ -63,10 +63,6 @@ To watch a battle between two trained AI's you can do the following:
 ## Configuration Options
 
 All config options are stored in the file `config/default.json`
-
-
-### NodeJS Training related settings
-- **maxWorkers** - *int* - The total worker threads to spawn when training in NodeJS mode. 
 
 ### Species related settings
 - **initialSpecies** - *int* - The total species created at the beginning

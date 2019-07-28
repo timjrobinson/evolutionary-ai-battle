@@ -1,6 +1,4 @@
 {
-  "maxWorkers": 10,
-
   "initialSpecies": 3,
   "initialGenomesPerSpecies": 3,
   "population": 100,
