@@ -8,18 +8,18 @@ import Battleground from './battleground'
 import Trainer from './trainer'
 import config from '../config/default.json'
 import log from './logger'
+
 const trainer = new Trainer();
 
 /**
  * If you have a file containing species that you've trained previously you can
- * uncomment these lines to load all the genomes from each species and continue 
- * training with them.  
+ * uncomment this line to load all genomes from the file and continue training with them.  
  */
-
 // import existingSpecies from "../species/SPECIESID/SPECIESID-generation-GENERATION-species.json";
-// trainer.loadSpeciesFromJSON(existingSpecies);
 
-if (!trainer.species.length) {
+if (typeof existingSpecies !== "undefined") {
+    trainer.loadSpeciesFromJSON(existingSpecies);
+} else { 
     trainer.createInitialSpecies();
 }
 

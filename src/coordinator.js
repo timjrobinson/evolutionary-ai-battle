@@ -22,6 +22,10 @@ import Trainer from './trainer'
 import Genome from './genome'
 import log from './logger'
 
+/**
+ * If you'd like to resume training from an existing species file, uncomment this line
+ */
+// import existingSpecies from "../species/SPECIESID/SPECIESID-generation-GENERATION-species.json";
 
 /** 
  * On first run of this file cluster.isMaster is true. There is only one master process. 
@@ -33,7 +37,6 @@ if (cluster.isMaster) {
     battleProcess();
 }
 
-
 /**
  * Initializes the trainer and species that will be evolved today. Then begins the battle.  
  */
@@ -41,12 +44,20 @@ function trainerProcess() {
     const runId = uuid.v1().toString().slice(0, 8);
     log.info("Run ID: " + runId);
     fs.mkdirSync(`species/${runId}/`, {recursive: true});
-    const workers = [];
     const trainer = new Trainer();
-    trainer.createInitialSpecies();
+    if (typeof existingSpecies !== "undefined") {
+        trainer.loadSpeciesFromJSON(existingSpecies);
+    } else {
+        trainer.createInitialSpecies();
+    }
     startGenerationBattles(runId, trainer);
 }
 
+/**
+ * Start all the battles in a single generation. Running them in parallel.  
+ * @param {string} runId 
+ * @param {Trainer} trainer 
+ */
 function startGenerationBattles(runId, trainer) {
     let roundsRemaining = trainer.getTotalRoundsRemaining();
     async.timesSeries(roundsRemaining, (i, next) => {

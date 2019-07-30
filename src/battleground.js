@@ -6,6 +6,7 @@
  */
 import { distanceBetweenPoints } from './math';
 import config from '../config/default.json'
+import log from './logger'
 
 const TICK_TIME = config.tickTime;
 const BOT_RADIUS = config.botSize / 2;
@@ -51,7 +52,6 @@ class Battleground {
      * @param {Function} onEnd - callback to call after the battle has ended
      */
     start(onEnd) {
-        console.log("Starting battleground");
         this.onEnd = onEnd;
         this.startTime = Date.now();
         this.lastUpdate = Date.now();
@@ -208,7 +208,7 @@ class Battleground {
 
                 if (distanceBetweenPoints(bullet.xPos, bullet.yPos, otherBot.xPos, otherBot.yPos) < (BULLET_RADIUS + BOT_RADIUS)) {
                     otherBot.lives -= 1;
-                    // console.log("Bot " + otherBot.id + " hit! Now has " + otherBot.lives + " lives left.");
+                    log.debug("Bot " + otherBot.id + " hit! Now has " + otherBot.lives + " lives left.");
                     if (otherBot.lives <= 0) {
                         this.winner = bot.id;
                         return this.end();
@@ -218,12 +218,12 @@ class Battleground {
             });
 
             bot.bullets = bot.bullets.filter(function (bullet) { return !bullet.dead; });
-            // console.log("Bot bullets: ", bot.bullets);
+            log.debug("Bot bullets: ", bot.bullets);
 
             if (botActions.ds && bot.bullets.length < 5 && (Date.now() - this.lastShootTime[i]) >= TICK_TIME) {
                 this.lastShootTime[i] = Date.now();
                 let bullet = this.spawnBullet(bot.xPos, bot.yPos, bot.rotation);
-                // console.log("Spawning bullet: ", bullet);
+                log.debug("Spawning bullet: ", bullet);
                 botActions.ds = false;
                 bot.bullets.push(bullet);
             }

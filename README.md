@@ -50,6 +50,9 @@ npm run train
 
 This will compile all the src files into `dist/nodejs/` then run `node dist/nodejs/coordinator.js` to start the training. 
 
+If training gets interrupted and you wish to start it from where it left off, there is a line at the top of src/coordinator.js which you can uncomment
+to resume training from that point. 
+
 ### Watching
 
 To watch a battle between two trained AI's you can do the following:
