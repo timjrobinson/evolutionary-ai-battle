@@ -294,10 +294,6 @@ class Bot {
                 minY: Math.floor(i / INPUT_WIDTH) * NN_SQUARE_SIZE,
                 maxY: (Math.floor(i / INPUT_WIDTH) + 1) * NN_SQUARE_SIZE,
             }
-            if (translatedPositions.xPos > currentSquare.minX && translatedPositions.xPos < currentSquare.maxX
-                && translatedPositions.yPos > currentSquare.minY && translatedPositions.yPos < currentSquare.maxY) {
-                neurons[i].value = 1;
-            }
             translatedPositions.bullets.forEach((bullet) => {
                 if (bullet.xPos > currentSquare.minX && bullet.xPos < currentSquare.maxX
                     && bullet.yPos > currentSquare.minY && bullet.yPos < currentSquare.maxY) {
@@ -310,6 +306,10 @@ class Bot {
                     neurons[i].value = -1;
                 }
             });
+            if (translatedPositions.xPos > currentSquare.minX && translatedPositions.xPos < currentSquare.maxX
+                && translatedPositions.yPos > currentSquare.minY && translatedPositions.yPos < currentSquare.maxY) {
+                neurons[i].value = 1;
+            }
         }
     }
 
