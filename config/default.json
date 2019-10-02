@@ -7,14 +7,32 @@
   "mapHeight" : 500,
   "botStartPoses": [
     {
-      "xPos": 36, 
-      "yPos": 260,
-      "rotation": 0
+      "xPos": {
+        "min": 36, 
+        "max": 236
+      },
+      "yPos": {
+        "min": 36,
+        "max": 474
+      },
+      "rotation": {
+        "min": -90,
+        "max": 90
+      }
     },
     {
-      "xPos": 964,
-      "yPos": 260,
-      "rotation": 180
+      "xPos": {
+        "min": 764,
+        "max": 964
+      },
+      "yPos": {
+        "min": 36,
+        "max": 474
+      },
+      "rotation": {
+        "min": 90,
+        "max": 270
+      }
     }
   ],
   "startingLives": 5,

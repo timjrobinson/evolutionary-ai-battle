@@ -30,20 +30,15 @@ const STARTING_LIVES = config.startingLives;
 class Bot {
     constructor(id) {
         this.id = id;
-        this.xPos = config.botStartPoses[0].xPos;
-        this.yPos = config.botStartPoses[0].yPos;
-        this.rotation = config.botStartPoses[0].rotation;
+        const poseNum = this.id - 1;
+        this.xPos = Math.floor(Math.random() * config.botStartPoses[poseNum].xPos.max + config.botStartPoses[poseNum].xPos.min);
+        this.yPos = Math.floor(Math.random() * config.botStartPoses[poseNum].yPos.max + config.botStartPoses[poseNum].yPos.min);
+        this.rotation = Math.floor(Math.random() * config.botStartPoses[poseNum].rotation.max + config.botStartPoses[poseNum].rotation.min);
+        if (this.rotation < 0) this.rotation += 360;
         this.bullets = [];
         this.lives = STARTING_LIVES;
         this.genome = new Genome();
         this.outputMethod = null;
-
-        if (this.id > 1) {
-            this.xPos = config.botStartPoses[1].xPos;
-            this.yPos = config.botStartPoses[1].yPos;
-            this.rotation = config.botStartPoses[1].rotation;
-        }
-
     }
 
     loadGenome(genome) {
