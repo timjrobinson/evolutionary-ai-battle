@@ -42,7 +42,7 @@ if (cluster.isMaster) {
  */
 function trainerProcess() {
     const runId = uuid.v1().toString().slice(0, 8);
-    log.info("Run ID: " + runId);
+    log.info("Starting Training Run ID: " + runId);
     fs.mkdirSync(`species/${runId}/`, {recursive: true});
     const trainer = new Trainer();
     if (typeof existingSpecies !== "undefined") {
@@ -60,19 +60,22 @@ function trainerProcess() {
  */
 function startGenerationBattles(runId, trainer) {
     let roundsRemaining = trainer.getTotalRoundsRemaining();
+    log.info(`Starting Generation ${trainer.totalGenerations}`)
     async.timesSeries(roundsRemaining, (i, next) => {
-        log.info(`Starting round ${i}...`);
+        log.debug(`Starting round ${i}...`);
         trainer.getRandomAvailableGenome((genome1) => {
             genome1.totalRounds++;
             const genome2 = trainer.getRandomGenome();
             startRound(trainer.totalGenerations, genome1, genome2, (results) => {
                 roundsRemaining--;
-                log.info(`${roundsRemaining} rounds remaining`);
+                log.debug(`${roundsRemaining} rounds remaining`);
                 if (roundsRemaining <= 0) {
-                    log.info("Saving current generation of species to disk");
+                    const speciesFilePath = `species/${runId}/${runId}-generation-${trainer.totalGenerations}-species.json`
+                    log.info(`Generation Complete`)
+                    log.debug(`Saving all species to file ${speciesFilePath}`);
                     const serializedSpecies = trainer.serializeSpecies();
-                    fs.writeFile(`species/${runId}/${runId}-generation-${trainer.totalGenerations}-species.json`, serializedSpecies, (err, result) => {
-                        log.info("Creating new generation")
+                    fs.writeFile(`${speciesFilePath}`, serializedSpecies, (err, result) => {
+                        log.debug("Creating new generation")
                         trainer.newGeneration();
                         setTimeout(startGenerationBattles.bind(this, runId, trainer));
                     });
@@ -81,7 +84,7 @@ function startGenerationBattles(runId, trainer) {
             next();
         });
     }, (err, result) => {
-        log.info("Finished starting rounds");
+        log.debug("Finished starting rounds");
     });
 
 }
