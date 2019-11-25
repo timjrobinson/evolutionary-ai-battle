@@ -15,17 +15,42 @@ const trainer = new Trainer();
  * If you have a file containing species that you've trained previously you can
  * uncomment this line to load all genomes from the file and continue training with them.  
  */
-// import existingSpecies from "../species/SPECIESID/SPECIESID-generation-GENERATION-species.json";
+// import existingSpecies from "../species/e1617a70/e1617a70-generation-1968-species.json";
+// if (typeof existingSpecies !== "undefined") {
+//     trainer.loadSpeciesFromJSON(existingSpecies);
+// } else { 
+//     trainer.createInitialSpecies();
+// }
 
-if (typeof existingSpecies !== "undefined") {
-    trainer.loadSpeciesFromJSON(existingSpecies);
-} else { 
-    trainer.createInitialSpecies();
+async function showBattleMenu() {
+    const response = await fetch('/species');
+    const species = await response.json();
+    species.forEach((s) => {
+        const battleSelectElement = document.getElementById("battle-select");
+        const newLink = document.createElement('a');
+        newLink.innerHTML = `${s.id} - Last Update: ${s.lastUpdate}`;
+        newLink.onclick = chooseSpecies.bind(null, s.id);
+        battleSelectElement.appendChild(newLink);
+    })
 }
 
-battle();
+async function chooseSpecies(speciesId) {
+    const battleSelectElement = document.getElementById("battle-select");
+    battleSelectElement.style.display = "none";
+    const response = await fetch(`/species/${speciesId}/latest`);
+    const speciesData = await response.json();
+    const battleElement = document.getElementById("battle");
+    battleElement.style.display = "block";
+    battle(speciesData);
+}
 
-function battle() {
+function battle(existingSpecies) {
+    if (existingSpecies != null) {
+        trainer.loadSpeciesFromJSON(existingSpecies);
+    } else {
+        trainer.createInitialSpecies();
+    }
+
     /* Bot 1 is the one we're training */
     const bot1 = new Bot(1);
     bot1.loadGenome(trainer.getTopGenome());
@@ -77,3 +102,4 @@ function battle() {
     });
 }
 
+showBattleMenu();
