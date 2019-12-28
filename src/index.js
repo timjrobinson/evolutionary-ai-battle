@@ -2,7 +2,7 @@
  * This is the main file for the browser based trainer. It imports the battleground and bots and 
  * play bots against each other one round at a time. 
  **/
-
+import Vue from 'vue/dist/vue.js'
 import Bot from './bot'
 import Battleground from './battleground'
 import Trainer from './trainer'
@@ -21,6 +21,13 @@ const trainer = new Trainer();
 // } else { 
 //     trainer.createInitialSpecies();
 // }
+
+var app = new Vue({
+    el: '#app',
+    data: {
+        name: "heya"
+    }
+});
 
 async function showBattleMenu() {
     const response = await fetch('/species');
