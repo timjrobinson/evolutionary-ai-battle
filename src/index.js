@@ -23,32 +23,61 @@ const trainer = new Trainer();
 // }
 
 var app = new Vue({
-    el: '#app',
+    el: '#evolutionary-ai-battle',
     data: {
-        name: "heya"
+        loading: true,
+        species: [],
+        speciesData: null,
+        generation: 1,
+        maxFitness: 0
+    },
+    methods: {
+        async selectSpecies(speciesId) {
+            const response = await fetch(`/species/${speciesId}/latest`);
+            const speciesData = await response.json();
+            this.speciesData = speciesData;
+            Vue.nextTick(() => {
+                battle(speciesData);
+            });
+        }
+    },
+    computed: {
+        speciesStats() {
+            this.generation = this.speciesData.totalGenerations;
+            this.maxFitness = this.speciesData.species.reduce((species, currentMax) => {
+                if (species.maxFitness > currentMax) {
+                    return species.maxFitness;
+                }
+                return currentMax;
+            }, 0);
+        }
+    },
+    async mounted() {
+        const response = await fetch('/species');
+        const species = await response.json();
+        this.species = formatSpecies(sortSpecies(species));
+        this.loading = false;
     }
 });
 
-async function showBattleMenu() {
-    const response = await fetch('/species');
-    const species = await response.json();
-    species.forEach((s) => {
-        const battleSelectElement = document.getElementById("battle-select");
-        const newLink = document.createElement('a');
-        newLink.innerHTML = `${s.id} - Last Update: ${s.lastUpdate}`;
-        newLink.onclick = chooseSpecies.bind(null, s.id);
-        battleSelectElement.appendChild(newLink);
-    })
+function sortSpecies(speciesData) {
+    return speciesData.sort((a, b) => {
+        const aLastUpdate = new Date(a.lastUpdate);
+        const bLastUpdate = new Date(b.lastUpdate);
+        return aLastUpdate.getTime() < bLastUpdate.getTime();
+    });
 }
 
-async function chooseSpecies(speciesId) {
-    const battleSelectElement = document.getElementById("battle-select");
-    battleSelectElement.style.display = "none";
-    const response = await fetch(`/species/${speciesId}/latest`);
-    const speciesData = await response.json();
-    const battleElement = document.getElementById("battle");
-    battleElement.style.display = "block";
-    battle(speciesData);
+function formatSpecies(speciesData) {
+    return speciesData.map((species) => {
+        console.log("LastUpdate: ", species.lastUpdate);
+        console.log("LastUpdate Formatted: ", new Date(species.lastUpdate).toLocaleString("en-US"));
+        return {
+            id: species.id,
+            lastUpdate: new Date(species.lastUpdate).toLocaleString(),
+            latestGeneration: species.latestGeneration
+        }
+    });
 }
 
 function battle(existingSpecies) {
@@ -108,5 +137,3 @@ function battle(existingSpecies) {
         setTimeout(battle);
     });
 }
-
-showBattleMenu();
