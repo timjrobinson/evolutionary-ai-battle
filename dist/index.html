@@ -16,7 +16,9 @@
         <div id="battle-select" v-if="!speciesData && !loading">
             <h2>Select Species</h2>
             <div v-if="!species.length">
-                It looks like you haven't run training yet. You can do this by running `npm run train` in another terminal. 
+                <p>It looks like you haven't run training yet, so there are no species to watch battle. </p>
+                <p>You can run training by running `npm run train` in another terminal and after one 
+                    generation is complete you'll be able to see them battle in your browser.</p>
             </div>
             <div v-else v-for="s in species" class="species-card" @click="selectSpecies(s.id)">
                 <div class="container">

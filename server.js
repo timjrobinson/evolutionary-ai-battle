@@ -12,6 +12,10 @@ const PORT = 1337;
 app.use(static('dist'))
 app.use(json({pretty: false}));
 const speciesFolder = p.join(__dirname, 'species');
+fs.mkdir(speciesFolder, {recursive: true}).catch((err) => {
+  console.error(err);
+  console.error(`Failed to create species folder at ${speciesFolder}. This directory is required.`);
+});
 
 function mapAsync(array, callbackfn) {
   return Promise.all(array.map(callbackfn));

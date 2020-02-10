@@ -36,7 +36,8 @@ export default class Species {
     serialize() {
         const genomes = this.genomes.map((genome) => {
             return genome.serialize();
-        })
+        });
+        this.maxFitness = Math.max(this.maxFitness, this.calculateMaxFitness());
         return {
             genomes: genomes,
             staleness: this.staleness,
@@ -62,16 +63,26 @@ export default class Species {
     }
 
     /**
-     * Go through genomes and check if any have reached at least 90% of the  last maxFitness. If 
-     * none have for MAX_STALE_CHECKS then this species is stale (no longer evolving to be fitter)
-     * and should be eliminated.
+     * Go through all genomes to calculate the max fitness for this species. 
+     * @returns {int} maxFitness the fitness of the fittest genome in this species
      */
-    checkStale(overallMaxFitness) {
+    calculateMaxFitness() {
         let maxFitness = 0;
 
         this.genomes.forEach(function (genome) {
             maxFitness = Math.max(maxFitness, genome.fitness);
         });
+
+        return maxFitness;
+    }
+
+    /**
+     * Go through genomes and check if any have reached at least 90% of the  last maxFitness. If 
+     * none have for MAX_STALE_CHECKS then this species is stale (no longer evolving to be fitter)
+     * and should be eliminated.
+     */
+    checkStale(overallMaxFitness) {
+        let maxFitness = this.calculateMaxFitness();
 
         if (maxFitness <= this.maxFitness && maxFitness <= (overallMaxFitness * 0.9)) {
             this.staleness++;
