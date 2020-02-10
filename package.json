@@ -8,8 +8,9 @@
   },
   "main": "src/index.js",
   "scripts": {
+    "start": "npm run compile-browser >/dev/null && node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "compile-browser": "npx webpack",
+    "compile-browser": "npx webpack --mode production",
     "compile-node": "npx babel -d dist/ src",
     "train": "npm run compile-node && node dist/coordinator.js"
   },
@@ -36,7 +37,6 @@
     "koa-router": "^7.4.0",
     "koa-static": "^5.0.0",
     "uuid": "^3.3.2",
-    "vue": "^2.6.11",
-    "winston": "^3.2.1"
+    "vue": "^2.6.11"
   }
 }

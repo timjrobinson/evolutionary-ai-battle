@@ -79,3 +79,6 @@ app.use(router.routes());
 app.listen(PORT);
 
 console.log(`Evolutionary AI Battle server started on port ${PORT}`);
+console.log(`Open http://localhost:${PORT} in your browser to watch.`);
+console.log();
+console.log(`Run 'npm run train' to train in parallel in headless mode`);
