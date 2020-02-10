@@ -24,9 +24,11 @@ var app = new Vue({
     },
     methods: {
         async selectSpecies(speciesId) {
+            this.loading = true;
             const response = await fetch(`/species/${speciesId}/latest`);
             const speciesData = await response.json();
             this.speciesData = speciesData;
+            this.loading = false;
             Vue.nextTick(() => {
                 battle.call(this, speciesData);
             });
