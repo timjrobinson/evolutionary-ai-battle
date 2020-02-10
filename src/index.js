@@ -11,40 +11,31 @@ import log from './logger'
 
 const trainer = new Trainer();
 
-/**
- * If you have a file containing species that you've trained previously you can
- * uncomment this line to load all genomes from the file and continue training with them.  
- */
-// import existingSpecies from "../species/e1617a70/e1617a70-generation-1968-species.json";
-// if (typeof existingSpecies !== "undefined") {
-//     trainer.loadSpeciesFromJSON(existingSpecies);
-// } else { 
-//     trainer.createInitialSpecies();
-// }
-
 var app = new Vue({
     el: '#evolutionary-ai-battle',
-    data: {
-        loading: true,
-        species: [],
-        speciesData: null,
-        generation: 1,
-        maxFitness: 0
+    data() {
+        return {
+            loading: true,
+            species: [],
+            speciesData: null,
+            generation: 1,
+            maxFitness: 0,
+            gg: 0
+        }
     },
     methods: {
         async selectSpecies(speciesId) {
             const response = await fetch(`/species/${speciesId}/latest`);
             const speciesData = await response.json();
             this.speciesData = speciesData;
+            this.updateSpeciesStats(speciesData);
             Vue.nextTick(() => {
                 battle(speciesData);
             });
-        }
-    },
-    computed: {
-        speciesStats() {
-            this.generation = this.speciesData.totalGenerations;
-            this.maxFitness = this.speciesData.species.reduce((species, currentMax) => {
+        },
+        updateSpeciesStats(speciesData) {
+            this.generation = speciesData.totalGenerations;
+            this.maxFitness = speciesData.species.reduce((currentMax, species) => {
                 if (species.maxFitness > currentMax) {
                     return species.maxFitness;
                 }

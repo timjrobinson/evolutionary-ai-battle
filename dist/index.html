@@ -9,8 +9,8 @@
 </head>
 <body>
     <div id="evolutionary-ai-battle">
+        <h1>Evolutionary AI Battle</h1>
         <div id="battle-select" v-if="!speciesData">
-            <h1>Evolutionary AI Battle</h1>
             <h2>Select Species</h2>
             <div v-if="loading">
                 Loading...
@@ -21,7 +21,7 @@
             <div v-else v-for="s in species" class="species-card" @click="selectSpecies(s.id)">
                 <div class="container">
                     <h2>{{s.id}}</h2>
-                    <p>Latest Generation: {{s.latestGeneration}}</p>
+                    <p>Total Generations: {{s.latestGeneration}}</p>
                     <p>Last Update: {{s.lastUpdate}}</p>
                 </div>
             </div>
@@ -31,10 +31,10 @@
             <br>
             <canvas id="bot1brain" width="400" height="400"></canvas>
             <canvas id="bot2brain" width="400" height="400"></canvas>
-        </div>
-        <div id="species-stats" v-if="speciesData">
-            <p>Generation: {{generation}}</p>
-            <p>Max Fitness: {{maxFitness}}</p>
+            <div id="species-stats">
+                <p>Generation: {{generation}}</p>
+                <p>Max Fitness: {{maxFitness}}</p>
+            </div>
         </div>
     </div>
     <script type="text/javascript" src="main.js"></script>
