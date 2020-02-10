@@ -18,9 +18,8 @@ var app = new Vue({
             loading: true,
             species: [],
             speciesData: null,
-            generation: 1,
-            maxFitness: 0,
-            gg: 0
+            bot1Stats: {},
+            bot2Stats: {}
         }
     },
     methods: {
@@ -28,14 +27,17 @@ var app = new Vue({
             const response = await fetch(`/species/${speciesId}/latest`);
             const speciesData = await response.json();
             this.speciesData = speciesData;
-            this.updateSpeciesStats(speciesData);
             Vue.nextTick(() => {
-                battle(speciesData);
+                battle.call(this, speciesData);
             });
         },
-        updateSpeciesStats(speciesData) {
-            this.generation = speciesData.totalGenerations;
-            this.maxFitness = speciesData.species.reduce((currentMax, species) => {
+    },
+    computed: {
+        generation() {
+            return this.speciesData.totalGenerations;
+        },
+        maxFitness() {
+            return this.speciesData.species.reduce((currentMax, species) => {
                 if (species.maxFitness > currentMax) {
                     return species.maxFitness;
                 }
@@ -80,15 +82,19 @@ function battle(existingSpecies) {
 
     /* Bot 1 is the one we're training */
     const bot1 = new Bot(1);
-    bot1.loadGenome(trainer.getTopGenome());
+    const bot1Genome = trainer.getTopGenome();
+    bot1.loadGenome(bot1Genome);
+    this.bot1Stats = bot1Genome.getStats();
 
     /**
      * Bot 2 picks a random algorithm initially, and after more rounds are completed
      * it starts using genomes for its movement. 
      **/
     const bot2 = new Bot(2);
-    bot2.loadGenome(trainer.getTopGenome());
+    const bot2Genome = trainer.getTopGenome();
+    bot2.loadGenome(bot2Genome);
     bot2.selectAIMethod(trainer.totalGenerations);
+    this.bot2Stats = bot2Genome.getStats();
 
     const battleground = new Battleground()
     battleground.addBots(bot1, bot2);
@@ -125,6 +131,6 @@ function battle(existingSpecies) {
             trainer.newGeneration();
         }
 
-        setTimeout(battle);
+        setTimeout(() => battle.call(this));
     });
 }
