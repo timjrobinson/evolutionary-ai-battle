@@ -137,13 +137,15 @@ export default class Species {
     }
 
     /**
-     * Reset the fitness of every genome in this species
+     * Reset the fitness of every genome in this species.
+     * Does not reset maxFitness as that is a record of the fittest genome this species has ever 
+     * had. maxFitness is kept to ensure the species does not go stale (where genomes become weaker 
+     * over time).
      */
     resetFitness() {
         this.genomes.forEach((genome) => {
             genome.fitness = 0;
         });
-        this.maxFitness = 0;
     }
 
     /**
