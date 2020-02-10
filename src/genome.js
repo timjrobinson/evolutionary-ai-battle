@@ -145,6 +145,15 @@ export default class Genome {
         }
     }
 
+    /**
+     * Returns statistical data about this genome, such as it's fitness
+     */
+    getStats() {
+        return {
+            fitness: this.fitness
+        }
+    }
+
     /** 
      * Create a new Genome that is an exact copy of this one
      */

@@ -1,9 +1,12 @@
-import winston from 'winston'
+let debugLogger = function(){};
 
-const logger = winston.createLogger({
-  transports: [
-    new winston.transports.Console()
-  ]
-})
+if (process.env.DEBUG) {
+  debugLogger = console.log;
+}
 
-export default logger
+const logger = {
+  debug: debugLogger,
+  info: console.log
+};
+
+export default logger;

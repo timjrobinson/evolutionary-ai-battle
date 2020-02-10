@@ -4,13 +4,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>Evolutionary AI Battle</title>
+    <link rel="stylesheet" href="style.css" type="text/css" />
 </head>
 <body>
-    <canvas id="battleground" width="1000" height="500"></canvas>
-    <br>
-    <canvas id="bot1brain" width="400" height="400"></canvas>
-    <canvas id="bot2brain" width="400" height="400"></canvas>
+    <div id="evolutionary-ai-battle">
+        <h1>Evolutionary AI Battle</h1>
+        <div id="loading" v-if="!speciesData && loading">
+            <h1>Loading...</h1>
+        </div>
+        <div id="battle-select" v-if="!speciesData && !loading">
+            <h2>Select Species</h2>
+            <div v-if="!species.length">
+                <p>It looks like you haven't run training yet, so there are no species to watch battle. </p>
+                <p>You can run training by running `npm run train` in another terminal and after one 
+                    generation is complete you'll be able to see them battle in your browser.</p>
+            </div>
+            <div v-else v-for="s in species" class="species-card" @click="selectSpecies(s.id)">
+                <div class="container">
+                    <h2>{{s.id}}</h2>
+                    <p>Total Generations: {{s.latestGeneration}}</p>
+                    <p>Last Update: {{s.lastUpdate}}</p>
+                </div>
+            </div>
+        </div>
+        <div id="battle" v-if="speciesData">
+            <canvas id="battleground" width="1000" height="500"></canvas>
+            <br>
+            <canvas id="bot1brain" width="400" height="400"></canvas>
+            <canvas id="bot2brain" width="400" height="400"></canvas>
+            <div id="species-stats">
+                <p>Generation: {{generation}}</p>
+                <p>Max Fitness: {{maxFitness}}</p>
+                <h3>Competitor Details</h3>
+                <h4>Red Bot</h4>
+                <p>Fitness: {{bot1Stats.fitness}}</p>
+                <h4>Blue Bot</h4>
+                <p>Fitness: {{bot2Stats.fitness}}</p>
+            </div>
+        </div>
+    </div>
     <script type="text/javascript" src="main.js"></script>
 </body>
 </html>

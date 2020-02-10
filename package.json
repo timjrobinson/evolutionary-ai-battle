@@ -2,15 +2,26 @@
   "name": "evolutionary-ai-battle",
   "version": "1.0.0",
   "description": "A 2D battleground simulation where AI's fight each other and evolve over time.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/timjrobinson/evolutionary-ai-battle.git"
+  },
   "main": "src/index.js",
   "scripts": {
+    "start": "npm run compile-browser >/dev/null && node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "compile-browser": "npx webpack",
+    "compile-browser": "npx webpack --mode production",
     "compile-node": "npx babel -d dist/ src",
     "train": "npm run compile-node && node dist/coordinator.js"
   },
   "author": "Tim Robinson <tim@timjrobinson.com>",
   "license": "MIT",
+  "keywords": [
+    "NEAT",
+    "neural network",
+    "evolutionary neural network",
+    "ai battle"
+  ],
   "devDependencies": {
     "@babel/cli": "^7.5.5",
     "@babel/core": "^7.5.5",
@@ -21,7 +32,11 @@
   "dependencies": {
     "async": "^2.6.2",
     "debug": "^4.1.1",
+    "koa": "^2.11.0",
+    "koa-json": "^2.0.2",
+    "koa-router": "^7.4.0",
+    "koa-static": "^5.0.0",
     "uuid": "^3.3.2",
-    "winston": "^3.2.1"
+    "vue": "^2.6.11"
   }
 }
