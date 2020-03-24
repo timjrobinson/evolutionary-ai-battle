@@ -67,6 +67,19 @@ To watch a battle between two trained AI's you can do the following:
 - Open [http://localhost:1337](http://localhost:1337) in your browser.
 - Select the name of the species you trained in Headless training. The list is sorted by date, so it's probably the first item.
 
+#### Battle Statistics
+
+In the watch mode you'll see there are battle statistics in the bottom right. These are:
+
+- Generation - The current generation number you are watching. Bots play in generations and each genome plays 5 battles per generation.
+- MaxFitness - The fitness of the most fit species in this generation.
+
+Competitor Details
+
+- Previous Fitness - The fitness of this genome in the last generation (total fitness over all 5 games added up). `New` means this genome is a child that was just created and so didn't battle last generation.
+- Current Fitness - The total fitness the genome has gained in battles in this generation. Starts at 0 and after each battle the results of that battle are used to calculate the genome fitness and add it to this number. See the "How is bot fitness calculated?" section of this README for more information.
+
+
 ## Configuration Options
 
 All config options are stored in the file `config/default.json`

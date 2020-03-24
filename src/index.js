@@ -40,6 +40,18 @@ var app = new Vue({
         },
         maxFitness() {
             return this.speciesData.maxFitness;
+        },
+        bot1Info() {
+            return {
+                lastFitness: this.bot1Stats.lastFitness || "NEW",
+                fitness: this.bot1Stats.fitness
+            }
+        },
+        bot2Info() {
+            return {
+                lastFitness: this.bot2Stats.lastFitness || "NEW",
+                fitness: this.bot2Stats.fitness
+            }
         }
     },
     async mounted() {

@@ -82,6 +82,7 @@ export default class Genome {
             step: config.stepSize
         };
         this.fitness = 0;
+        this.lastFitness = 0;
         this.globalRank = 0;
         this.initializeNeurons();
         this.maxNeuron = INPUT_NEURONS;
@@ -111,7 +112,8 @@ export default class Genome {
         const genome = new Genome();
         genome.mutationRates = Object.assign({}, data.mutationRates);
         genome.maxNeuron = data.maxNeuron;
-        genome.fitness = data.fitness;
+        genome.fitness = 0;
+        genome.lastFitness = data.fitness;
 
         /** Load all the genes into the genome first */
         data.genes.forEach((geneData) => {
@@ -150,7 +152,8 @@ export default class Genome {
      */
     getStats() {
         return {
-            fitness: this.fitness
+            fitness: this.fitness,
+            lastFitness: this.lastFitness
         }
     }
 

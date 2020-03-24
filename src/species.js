@@ -26,7 +26,7 @@ export default class Species {
         genomes.forEach((genomeData) => {
             const genome = Genome.loadFromJSON(genomeData);
             species.genomes.push(genome);
-        })
+        });
         return species;
     }
 
@@ -155,6 +155,7 @@ export default class Species {
      */
     resetFitness() {
         this.genomes.forEach((genome) => {
+            genome.lastFitness = genome.fitness;
             genome.fitness = 0;
         });
     }
