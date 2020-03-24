@@ -145,6 +145,26 @@ This object is sent to the bot each tick and the bot uses that to make it's next
 
 You can only have a maximum of 5 bullets on the screen at once and they are destroyed when they hit the opponent or wall. Each player has 5 lives. 
 
+### How is bot fitness calculated?
+
+Bot fitness is used to determine what Species go on to produce children vs those that die out. After each battle the fitness is calculated for Bot 1 with the following calculation:
+
+First the fitness is initialized to the generation number of the species, this gives genomes a little boost to account for battles being harder as time goes on. A bot with 100 fitness in generation 500 is probably much better than one with 100 fitness in generation 5.
+
+The bot then gets +20 fitness for each hit on the opponent.
+
+If the bot lost the battle it gets +1 fitness for each second it survived.
+
+If the bot won the battle it gains:
+
+- +1 fitness for each second it had left until maxRoundTime (60 seconds by default), to reward it for winning quickly.
+- +10 fitness for each life it had left.
+- +100 fitness for winning.
+
+Only Bot1 gets a fitness score and contributes to the genome/species overall fitness. Bot 2 is simply a random opponent to fight against and is discarded at the end of the battle.
+
+Bots play 5 battles (versus a random genome each time) in each Round. The fitness from each battle is summed to get the overall fitness of the genome for species culling/reproduction.
+
 ### How does the bot brain map work?
 
 When the bot receives input from the battleground it takes those player and bullet positions and turns

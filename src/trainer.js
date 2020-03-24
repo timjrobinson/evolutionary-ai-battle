@@ -63,6 +63,8 @@ export default class Trainer {
         serializedData.species = this.species.map((species) => {
             return species.serialize();
         });
+        this.calculateGlobalMaxFitness();
+        serializedData.maxFitness = this.maxFitness;
         serializedData.totalGenerations = this.totalGenerations;
         return JSON.stringify(serializedData);
     }
@@ -175,12 +177,12 @@ export default class Trainer {
     }
 
     /** 
-     * Find the highest fitness value amongst all species
+     * Find the highest fitness value amongst all species. Save that to this.maxFitness.
      */
     calculateGlobalMaxFitness() {
         this.maxFitness = this.species.reduce((maxFitness, species) => {
             return Math.max(maxFitness, species.maxFitness || 0);
-        }, this.maxFitness)
+        }, this.maxFitness);
         debug("Global max fitness is now: ", this.maxFitness);
     }
 
@@ -322,6 +324,34 @@ export default class Trainer {
         });
 
         return sum / coincident;
+    }
+
+    /**
+     * Calculate the bots fitness in a round based on the results it achieved during that round
+     * @param {Object} results - Battle results in an object
+     * @param {int} totalGenerations - 
+     * @returns {Object} botFitness - The fitness of each bot based on the results
+     */
+    static calculateBotFitnessFromResults(results, totalGenerations)  {
+        const maxRoundTime = config.maxRoundTime;
+        log.debug("Calculating bot fitness from results: ", results, " total generations: ", totalGenerations);
+        /* Set the bots initial fitness to the generation it's in, as battles are tougher later */
+        let botFitness = totalGenerations;
+        /* Give the bot 20 points of fitness for each life it took off the opponent */
+        botFitness +=  ((5 - results.bot2.lives) * 20);
+        if (results.winner == 1) {
+            /* If the bot won it gets bonus fitness the quicker it won */
+            botFitness += maxRoundTime - Math.min(maxRoundTime, Math.floor(results.totalTime));
+            /* The bot gets 10 fitness points for each life it had left at the end */
+            botFitness += results.bot1.lives * 10;
+            /* The bot gets bonus fitness for winning */
+            botFitness += 100;
+        } else {
+            /* If the bot lost it gets bonus fitness for the longer it survived */
+            botFitness += Math.min(maxRoundTime, Math.floor(results.totalTime));
+        }
+        log.debug("Bot fitness is: ", botFitness);
+        return botFitness;
     }
 
     /** 
