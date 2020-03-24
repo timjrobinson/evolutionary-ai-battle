@@ -105,12 +105,7 @@ function startRound(totalGenerations, genome1, genome2, callback) {
     });
 
     function handleResults(results) {
-        let botFitness = Math.min(60, Math.floor(results.totalTime)) + ((5 - results.bot2.lives) * 20)
-        if (results.winner == 1) {
-            botFitness += results.bot1.lives * 10;
-            botFitness += 150;
-        }
-        log.debug("Bot fitness is: ", botFitness);
+        let botFitness = Trainer.calculateBotFitnessFromResults(results, totalGenerations);
         genome1.addFitness(botFitness);
         worker.kill();
         return callback(results);

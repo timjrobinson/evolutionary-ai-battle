@@ -67,6 +67,19 @@ To watch a battle between two trained AI's you can do the following:
 - Open [http://localhost:1337](http://localhost:1337) in your browser.
 - Select the name of the species you trained in Headless training. The list is sorted by date, so it's probably the first item.
 
+#### Battle Statistics
+
+In the watch mode you'll see there are battle statistics in the bottom right. These are:
+
+- Generation - The current generation number you are watching. Bots play in generations and each genome plays 5 battles per generation.
+- MaxFitness - The fitness of the most fit species in this generation.
+
+Competitor Details
+
+- Previous Fitness - The fitness of this genome in the last generation (total fitness over all 5 games added up). `New` means this genome is a child that was just created and so didn't battle last generation.
+- Current Fitness - The total fitness the genome has gained in battles in this generation. Starts at 0 and after each battle the results of that battle are used to calculate the genome fitness and add it to this number. See the "How is bot fitness calculated?" section of this README for more information.
+
+
 ## Configuration Options
 
 All config options are stored in the file `config/default.json`
@@ -144,6 +157,26 @@ This object is sent to the bot each tick and the bot uses that to make it's next
 - **dh** - *int [-15 - 15]* - The rotation speed of the bot, where -15 is counterclockwise and 15 is clockwise
 
 You can only have a maximum of 5 bullets on the screen at once and they are destroyed when they hit the opponent or wall. Each player has 5 lives. 
+
+### How is bot fitness calculated?
+
+Bot fitness is used to determine what Species go on to produce children vs those that die out. After each battle the fitness is calculated for Bot 1 with the following calculation:
+
+First the fitness is initialized to the generation number of the species, this gives genomes a little boost to account for battles being harder as time goes on. A bot with 100 fitness in generation 500 is probably much better than one with 100 fitness in generation 5.
+
+The bot then gets +20 fitness for each hit on the opponent.
+
+If the bot lost the battle it gets +1 fitness for each second it survived.
+
+If the bot won the battle it gains:
+
+- +1 fitness for each second it had left until maxRoundTime (60 seconds by default), to reward it for winning quickly.
+- +10 fitness for each life it had left.
+- +100 fitness for winning.
+
+Only Bot1 gets a fitness score and contributes to the genome/species overall fitness. Bot 2 is simply a random opponent to fight against and is discarded at the end of the battle.
+
+Bots play 5 battles (versus a random genome each time) in each Round. The fitness from each battle is summed to get the overall fitness of the genome for species culling/reproduction.
 
 ### How does the bot brain map work?
 

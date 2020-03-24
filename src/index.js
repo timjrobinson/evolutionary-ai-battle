@@ -39,12 +39,19 @@ var app = new Vue({
             return this.speciesData.totalGenerations;
         },
         maxFitness() {
-            return this.speciesData.species.reduce((currentMax, species) => {
-                if (species.maxFitness > currentMax) {
-                    return species.maxFitness;
-                }
-                return currentMax;
-            }, 0);
+            return this.speciesData.maxFitness;
+        },
+        bot1Info() {
+            return {
+                lastFitness: this.bot1Stats.lastFitness || "NEW",
+                fitness: this.bot1Stats.fitness
+            }
+        },
+        bot2Info() {
+            return {
+                lastFitness: this.bot2Stats.lastFitness || "NEW",
+                fitness: this.bot2Stats.fitness
+            }
         }
     },
     async mounted() {
@@ -101,24 +108,8 @@ function battle(existingSpecies) {
     const battleground = new Battleground()
     battleground.addBots(bot1, bot2);
     battleground.start((results) => {
-        log.info("Battle results: ", results);
-
-        const maxRoundTime = config.maxRoundTime;
-
-        /* Give the bot an initial fitness of 20 points for each life it took off the opponent */
-        let botFitness =  ((5 - bot2.lives) * 20);
-        if (results.winner == 1) {
-            /* If the bot won it gets bonus fitness the quicker it won */
-            botFitness += maxRoundTime - Math.min(maxRoundTime, Math.floor(results.totalTime))
-            /* The bot gets 10 fitness points for each life it had left at the end */
-            botFitness += bot1.lives * 10;
-            /* The bot gets bonus fitness for winning */
-            botFitness += 150;
-        } else {
-            /* If the bot lost it gets bonus fitness for the longer it survived */
-            botFitness += Math.min(maxRoundTime, Math.floor(results.totalTime))
-        }
-        log.debug("Bot fitness is: ", botFitness);
+        /* Calculate the bots fitness using the trainer method */
+        const botFitness =  Trainer.calculateBotFitnessFromResults(results, trainer.totalGenerations);
 
         /**
          * Add the fitness for this round to the bot. Then increase played rounds as each bot only 
@@ -128,7 +119,6 @@ function battle(existingSpecies) {
         bot1.genome.totalRounds++;
 
         const roundsRemaining = trainer.getTotalRoundsRemaining() 
-        log.info("Round Complete, " + roundsRemaining + " rounds remaining");
         if (roundsRemaining <= 0) {
             trainer.newGeneration();
         }
