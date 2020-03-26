@@ -2,6 +2,8 @@
 
 A 2D battleground simulation where AI's fight each other and evolve over time. 
 
+![Example of AI evolving over generations](example.gif)
+
 ## Overview
 
 Many universities and companies hold virtual AI battles for their engineers. You are given a sandbox environment with a few 
