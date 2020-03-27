@@ -4,10 +4,12 @@ const Router = require("koa-router");
 const static = require("koa-static");
 const fs = require("fs").promises;
 const p = require("path");
+const open = require("open");
 
 const app = new Koa();
 const router = new Router();
-const PORT = 1337;
+const PORT = process.env.PORT || 1337;
+const HOST = process.env.HOST || "localhost";
 
 app.use(static('dist'))
 app.use(json({pretty: false}));
@@ -82,7 +84,10 @@ router
 app.use(router.routes());
 app.listen(PORT);
 
+const url = `http://${HOST}:${PORT}`;
+
 console.log(`Evolutionary AI Battle server started on port ${PORT}`);
-console.log(`Open http://localhost:${PORT} in your browser to watch.`);
+console.log(`Opening ${url} in your browser now...`);
+open(url);
 console.log();
 console.log(`Run 'npm run train' to train in parallel in headless mode`);
