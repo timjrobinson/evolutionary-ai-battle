@@ -30,7 +30,7 @@
     "webpack-cli": "^5.0.1"
   },
   "dependencies": {
-    "async": "^2.6.3",
+    "async": "^2.6.4",
     "debug": "^4.1.1",
     "koa": "^2.11.0",
     "koa-json": "^2.0.2",
